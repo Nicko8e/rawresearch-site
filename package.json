@@ -1,0 +1,11 @@
+{
+  "name": "rawresearch-site",
+  "private": true,
+  "description": "RawResearch website: static app in public/, API in functions/ (Cloudflare Pages Functions)",
+  "scripts": {
+    "dev": "npx wrangler@4.150.0 pages dev public --kv KV"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.133.0"
+  }
+}
