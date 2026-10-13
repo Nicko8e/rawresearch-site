@@ -815,8 +815,8 @@ window.RR_WEB={dataBase:'https://data.companyresearch.io/'};
   async function ask(prompt){
     let r, j=null;
     try{ r=await fetch("/api/claude",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({prompt})}); j=await r.json(); }
-    catch(e){ throw Object.assign(new Error("Research couldn't be reached. Check your connection and try again."),{code:"network"}); }
-    if(!r.ok || !j || j.error){ const er=(j&&j.error)||{}; throw Object.assign(new Error(er.message||"Research failed. Try again in a moment."),{code:er.code||"error"}); }
+    catch(e){ throw Object.assign(new Error("Research couldn't be reached. Check your connection and try again."),{code:"network",web:true}); }
+    if(!r.ok || !j || j.error){ const er=(j&&j.error)||{}; throw Object.assign(new Error(er.message||"Research failed. Try again in a moment."),{code:er.code||"error",web:true}); }
     return j.result;
   }
   const sample=async(prompt)=>JSON.stringify(await ask(prompt));
@@ -1211,7 +1211,7 @@ async function loadCompany(t){
     try{ data=await sample.json(samplePrompt(t)); }
     catch(e){
       const map={not_granted:"You declined to let this page ask Claude, so it can't look up new tickers in this view. Reload to be asked again.",rate_limited:"Research is busy or has reached today's limit. Wait a minute and press Calculate again.",invalid_json:"Claude's reply couldn't be read as data. Press Calculate to try again.",session_expired:"Your Claude session expired. Sign in again, then press Calculate.",sampling_disabled:"Claude isn't available to this page on your account."};
-      throw new Error(map[e&&e.code]||(e&&e.code==="timeout"? e.message : "The data request failed. Press Calculate to try again."));
+      throw new Error(map[e&&e.code]||(e&&(e.code==="timeout"||e.web)? e.message : "The data request failed. Press Calculate to try again."));
     }
     if(!validData(data)) throw new Error(`Claude doesn't have enough reliable financial data for "${t}". Check the ticker and exchange suffix.`);
     data.ticker=data.ticker||t;
@@ -2597,7 +2597,7 @@ async function loadResearch(t, hintName){
     const sample=await caps.sample;
     if(!sample) throw new Error("Research isn't available right now. Try again later.");
     try{ res=await sample.json(researchPrompt(t, hintName)); }
-    catch(e){ const map={not_granted:"You declined to let this page ask Claude, so Research can't run. Reload to be asked again.",rate_limited:"Research is busy or has reached today's limit. Wait a minute and try again.",invalid_json:"Claude's reply couldn't be read. Press the button to try again."}; throw new Error(map[e&&e.code]||(e&&e.code==="timeout"? e.message : "The research request failed. Please try again.")); }
+    catch(e){ const map={not_granted:"You declined to let this page ask Claude, so Research can't run. Reload to be asked again.",rate_limited:"Research is busy or has reached today's limit. Wait a minute and try again.",invalid_json:"Claude's reply couldn't be read. Press the button to try again."}; throw new Error(map[e&&e.code]||(e&&(e.code==="timeout"||e.web)? e.message : "The research request failed. Please try again.")); }
     if(!res || !Array.isArray(res.competitors)) throw new Error(`Claude couldn't research "${t}". Check the company name or stock code.`);
     res.fetchedAt=new Date().toISOString();
     if(db){ try{ await db.doc("moat/"+id).set({res, fetchedAt:res.fetchedAt}); }catch(e){} }

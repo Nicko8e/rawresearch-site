@@ -4,7 +4,7 @@
 // Spending is capped per day (DAILY_LIMIT_USD) and per visitor per hour (HOURLY_PER_VISITOR).
 import Anthropic from "@anthropic-ai/sdk";
 
-const MODEL = "claude-opus-5-5";
+export const MODEL = "claude-opus-5-5";
 const USD_PER_INPUT_TOKEN = 4 / 1e6, USD_PER_OUTPUT_TOKEN = 20 / 1e6;   // Claude Opus 5.5 list prices
 const CACHE_DAYS = 30;
 const MAX_PROMPT_CHARS = 40000;
@@ -23,6 +23,22 @@ const fail = (code, message, status) => json({error: {code, message}}, status);
 async function sha256(text) {
   const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
   return [...new Uint8Array(d)].map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+// The model settings, shared with /api/health so its test sends the same kind of request.
+export const requestOptions = () => ({
+  model: MODEL,
+  max_tokens: 16000,
+  output_config: {effort: "medium"},
+  betas: ["server-side-fallback-2026-07-01"],
+  fallbacks: "default",
+});
+
+// "400 invalid_request_error: <Anthropic's message>" -- short, and safe to show
+export function describe(e) {
+  const inner = e && e.error && e.error.error;
+  const text = inner ? `${e.status || ""} ${inner.type || ""}: ${inner.message || ""}` : `${(e && e.status) || ""} ${(e && e.message) || String(e)}`;
+  return text.trim().slice(0, 300);
 }
 
 function parseReply(text) {
@@ -58,19 +74,15 @@ export async function onRequestPost({request, env}) {
   const client = new Anthropic({apiKey: env.ANTHROPIC_API_KEY, ...(env.ANTHROPIC_BASE_URL ? {baseURL: env.ANTHROPIC_BASE_URL} : {})});
   let msg;
   try {
-    msg = await client.beta.messages.create({
-      model: MODEL,
-      max_tokens: 16000,
-      output_config: {effort: "medium"},
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
-      messages: [{role: "user", content: prompt}],
-    });
+    msg = await client.beta.messages.create({...requestOptions(), messages: [{role: "user", content: prompt}]});
   } catch (e) {
-    if (e instanceof Anthropic.RateLimitError) return fail("rate_limited", "Research is busy right now. Wait a minute and try again.", 429);
-    if (e instanceof Anthropic.AuthenticationError) return fail("not_configured", "The site's research key isn't working. The site owner needs to check it.", 503);
-    if (e instanceof Anthropic.APIError) return fail("upstream", "Research failed. Try again in a moment.", 502);
-    return fail("upstream", "Research couldn't be reached. Try again in a moment.", 502);
+    // The reason is shown to the visitor (it never contains the key), so a setup problem can be seen and fixed.
+    const why = `(${describe(e)})`;
+    console.log("anthropic error", why);
+    if (e instanceof Anthropic.RateLimitError) return fail("rate_limited", "Research is busy right now. Wait a minute and try again. " + why, 429);
+    if (e instanceof Anthropic.AuthenticationError || e instanceof Anthropic.PermissionDeniedError) return fail("not_configured", "The site's research key isn't working. The site owner needs to check it. " + why, 503);
+    if (e instanceof Anthropic.APIError) return fail("upstream", "Research failed. Try again in a moment. " + why, 502);
+    return fail("upstream", "Research couldn't be reached. Try again in a moment. " + why, 502);
   }
 
   const u = msg.usage || {};
@@ -80,7 +92,7 @@ export async function onRequestPost({request, env}) {
   if (msg.stop_reason === "refusal") return fail("refused", "Claude declined this request.", 422);
   const text = msg.content.filter(b => b.type === "text").map(b => b.text).join("");
   const result = parseReply(text);
-  if (!result) return fail("invalid_json", "Claude's reply couldn't be read as data.", 502);
+  if (!result) return fail("invalid_json", `Claude's reply couldn't be read as data (stop reason: ${msg.stop_reason}).`, 502);
   if (Object.keys(result).length)                          // an empty answer isn't saved, so a retry asks again
     await env.KV.put(key, JSON.stringify(result), {expirationTtl: CACHE_DAYS * 86400});
   return json({result, cached: false});

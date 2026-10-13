@@ -48,8 +48,8 @@ window.RR_WEB={dataBase:%r};
   async function ask(prompt){
     let r, j=null;
     try{ r=await fetch("/api/claude",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({prompt})}); j=await r.json(); }
-    catch(e){ throw Object.assign(new Error("Research couldn't be reached. Check your connection and try again."),{code:"network"}); }
-    if(!r.ok || !j || j.error){ const er=(j&&j.error)||{}; throw Object.assign(new Error(er.message||"Research failed. Try again in a moment."),{code:er.code||"error"}); }
+    catch(e){ throw Object.assign(new Error("Research couldn't be reached. Check your connection and try again."),{code:"network",web:true}); }
+    if(!r.ok || !j || j.error){ const er=(j&&j.error)||{}; throw Object.assign(new Error(er.message||"Research failed. Try again in a moment."),{code:er.code||"error",web:true}); }
     return j.result;
   }
   const sample=async(prompt)=>JSON.stringify(await ask(prompt));
@@ -162,6 +162,10 @@ async function fbSend(){
   finally{ $("fbSend").disabled=false; }
 }
 """)
+
+# ---------- 2e. show the site's own error message (it says what went wrong) instead of a generic one ----------
+html, n = re.subn(r'map\[e&&e\.code\]\|\|\(e&&e\.code==="timeout"\? e\.message : ', 'map[e&&e.code]||(e&&(e.code==="timeout"||e.web)? e.message : ', html)
+if n != 2: sys.exit(f"build-web: expected 2 generic request-failed messages, found {n}")
 
 # ---------- 3. wording that pointed visitors to Claude ----------
 for old, new in [
