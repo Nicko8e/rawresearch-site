@@ -15,7 +15,9 @@ it left off, because the work list is worked out from the answers already saved.
       answers older than 30 days. If it says 0 prompts, everything is done: stop.
    2. Split the prompt files between 5 helper agents (4 each) and run them in parallel. Give each helper the
       instructions under "Answering a prompt" below and its list of files.
-   3. `node tools/research-queue.mjs commit` commits and pushes what was saved. The site rebuilds at most every
+   3. Add a line to `tools/run-log.csv`: the time (UTC), companies finished, answers saved, the helpers' total tokens
+      (from each helper's usage report) and whether the batch stopped because usage ran out (yes/no).
+   4. `node tools/research-queue.mjs commit` commits and pushes what was saved. The site rebuilds at most every
       2 hours; other pushes wait for the next rebuild.
 3. If you're stopping for any other reason, end with `node tools/research-queue.mjs commit --deploy`, then `node tools/research-queue.mjs status`, and put the
    status line in the thread's status checklist. Reply in the thread only if something failed or the owner must act.

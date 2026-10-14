@@ -142,7 +142,7 @@ if (cmd === "next") {
   for (const t of ord) if (cik.has(t) && !first.has(cik.get(t))) first.set(cik.get(t), t);
   for (const [t, c] of cik) if (first.has(c) && first.get(c) !== t) alias[t] = first.get(c);
   if (Object.keys(alias).length) { fs.mkdirSync(ANSWERS, {recursive: true}); fs.writeFileSync(path.join(ANSWERS, "aliases.json"), JSON.stringify(alias)); }
-  git("add public/answers" + (fs.existsSync(path.join(ROOT, "tools/skip.txt")) ? " tools/skip.txt" : ""));
+  git("add public/answers" + ["tools/skip.txt", "tools/run-log.csv"].filter(f => fs.existsSync(path.join(ROOT, f))).map(f => " " + f).join(""));
   const n = git("diff --cached --name-only -- public/answers").split("\n").filter(Boolean).length;
   if (!n) { console.log("nothing new to commit"); process.exit(0); }
   const lastDeploy = Number(git(`log -1 --format=%ct --invert-grep --grep="CI Skip" -- public/answers`) || 0);
