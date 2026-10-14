@@ -51,12 +51,13 @@ export function describe(e) {
 
 // A prompt's id, which names its answer file public/answers/<id>.json. tools/research-queue.mjs computes the same.
 // The two main prompts are keyed by company, so the routine can research every company ahead of time:
-//   "valuation/<TICKER>" (Valuation tab) and "research/<TICKER>" (Research tab).
+//   "valuation/<TICKER>" (Valuation tab), "research/<TICKER>" (Research tab) and "frameworks/<TICKER>" (every investor framework at once).
 // Any other prompt is keyed by the first 40 hex digits of its SHA-256.
 export async function answerId(prompt) {
   let m;
   if (prompt.startsWith("You are a meticulous equity research assistant.") && (m = prompt.match(/ticker "([A-Z0-9._-]{1,40})"/))) return "valuation/" + m[1];
   if (prompt.startsWith("You are a careful equity research analyst. Assess the competitive advantages") && (m = prompt.match(/\(ticker ([A-Z0-9._-]{1,40})\)/))) return "research/" + m[1];
+  if (prompt.startsWith("You are a careful equity research analyst. Apply famous investors' frameworks") && (m = prompt.match(/\(ticker ([A-Z0-9._-]{1,40})\)/))) return "frameworks/" + m[1];
   return (await sha256(prompt)).slice(0, 40);
 }
 
@@ -71,7 +72,7 @@ async function assetJSON(request, env, file) {
 export async function savedAnswer(request, env, id) {
   const hit = await assetJSON(request, env, `/answers/${id}.json`);
   if (hit) return hit.result || null;
-  const m = id.match(/^(research|valuation)\/(.+)$/);
+  const m = id.match(/^(research|valuation|frameworks)\/(.+)$/);
   if (!m) return null;
   const alias = ((await assetJSON(request, env, "/answers/aliases.json")) || {})[m[2]];
   return alias ? ((await assetJSON(request, env, `/answers/${m[1]}/${alias}.json`)) || {}).result || null : null;

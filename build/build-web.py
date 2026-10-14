@@ -173,7 +173,7 @@ replace_once('<p class="note" style="margin:0" id="resMeta"></p>',
              '<p class="note" style="margin:0" id="resMeta"></p>\n        <p class="note" style="margin:4px 0 0">Want deeper research? <a href="%s" target="_blank" rel="noopener">Open RawResearch in Claude</a>. It runs on Claude\'s most capable models and is free with your own Claude account.</p>' % CLAUDE_EDITION)
 
 # ---------- 2g. let the research routine build the exact prompts the page sends (tools/research-queue.mjs) ----------
-replace_once("\n})();\n</script>\n\n</body>", "\nwindow.RR_PROMPTS={researchPrompt, samplePrompt};   // used by tools/research-queue.mjs\n})();\n</script>\n\n</body>")
+replace_once("\n})();\n</script>\n\n</body>", "\nwindow.RR_PROMPTS={researchPrompt, samplePrompt, fwPrompt};   // used by tools/research-queue.mjs\n})();\n</script>\n\n</body>")
 
 # ---------- 2h. frameworks: show the site's message (e.g. "on the research list") instead of a generic retry ----------
 replace_once("""catch(e){ throw new Error(e&&e.code==="timeout"? e.message : "Claude couldn't apply this framework just now. Choose it again to retry."); }""",

@@ -2203,14 +2203,60 @@ const FRAMEWORKS=[
    ["va5","Capital efficient","Does it grow without needing endless outside money?",false,"fcf"]]}]}
 ];
 function fwById(id){ return FRAMEWORKS.find(f=>f.id===id)||FRAMEWORKS[0]; }
-function fwPrompt(fw, name, t){
-  const items=fw.groups.flatMap(g=>g.items).map(i=>`   "${i[0]}": ${i[2]}`).join("\n");
-  return `You are a careful equity research analyst. Apply ${fw.name}'s investment framework (${fw.source}) to the publicly listed company "${name||t}" (ticker ${t}). Use the most recent information you know. Be specific (names, numbers, years). Never invent figures.
+/* Many investors ask the same thing in different words, so each question is researched once per company and shared by every
+   framework that asks it. An item maps to: a Research checklist id (c1, m1, v2…: answered with the Research), "pricing" (Research's
+   pricing-power rating), or a shared question below. Everything else is asked once in one combined prompt for all frameworks. */
+const FW_SAME={
+  g1:"c1", g5:"c3", ge2:"c7", va1:"c7", fi6:"v2", va4:"m1", ly1:"v1", b4:"pricing",
+  g2:"c2", b3:"c2", mu3:"c2", pa3:"c2", ac2:"c2",
+  b5:"integrity", mu4:"integrity", fi8:"integrity", ak2:"integrity", ac5:"integrity",
+  th6:"durable", sm5:"durable", mu6:"reinvest", sm4:"reinvest", ak3:"reinvest",
+  ns2:"runway", ly6:"runway", fi1:"runway", b1:"simple", mu1:"simple", pa1:"simple",
+  b11:"safety", pa5:"safety", gb3:"safety", mu2:"fairprice", ak4:"fairprice", ge7:"fairprice", sm7:"fcfyield", ac6:"fcfyield",
+  g3:"momentum", dr5:"momentum", th2:"timing", va3:"timing", ge4:"team", th4:"team", ge1:"trend", dr3:"trend",
+  fi7:"longterm", ns3:"longterm", wo5:"longterm"};
+const FW_SHARED={
+  integrity:"Is management honest and candid with shareholders, rational with capital, paid in a way that lines up with owners, and well governed?",
+  durable:"Will its market position still hold in 10 to 20 years, resisting disruption and obsolescence?",
+  reinvest:"Can it reinvest its profits at high returns for many years?",
+  runway:"Can its sales keep growing substantially for many years, into new places or products?",
+  simple:"Is it an established business simple enough for a careful generalist to understand well?",
+  safety:"Is the share price well below a conservative estimate of the business's value (a margin of safety)?",
+  fairprice:"Is the price reasonable for the quality and growth on offer?",
+  fcfyield:"Is the free-cash-flow yield reasonable or attractive for its quality and growth?",
+  momentum:"Has the share price risen strongly over roughly the last six to twelve months, beating the market?",
+  timing:"Is the technology and market timing right for this business now?",
+  team:"Is it led by an exceptional founder or world-class management team?",
+  trend:"Is it a leading beneficiary of a major platform shift or secular trend (such as AI or cloud computing)?",
+  longterm:"Does management put long-term value and innovation ahead of short-term profit?",
+  // the tests worked out from SEC figures, asked only so companies without SEC figures still get an answer (f1-f4 come with the Research)
+  roic:"Does it earn a high, consistent return on the capital it uses, without relying on debt?",
+  fcf:"Does it turn most of its profit into plenty of free cash flow?",
+  gm:"Is the gross margin high, a sign of pricing power?",
+  ni10:"Has it been profitable in each of the last ten years?",
+  eps10:"Has earnings per share grown by at least one third over ten years?"};
+const CHECK_IDS=new Set(CHECK_GROUPS.flatMap(g=>g.items.map(i=>i[0])));
+const fwSame=i=> FW_SAME[i[0]] || i[4] || i[0];
+const fromResearch=id=> id==="pricing" || CHECK_IDS.has(id);
+function fwPrompt(name, t){
+  const fws=FRAMEWORKS.filter(f=>f.groups), seen=new Map();
+  for(const f of fws) for(const i of f.groups.flatMap(g=>g.items)){ const id=fwSame(i); if(!fromResearch(id) && !seen.has(id)) seen.set(id, FW_SHARED[id]||i[2]); }
+  return `You are a careful equity research analyst. Apply famous investors' frameworks to the publicly listed company "${name||t}" (ticker ${t}). Use the most recent information you know. Be specific (names, numbers, years). Never invent figures.
 Reply with ONLY one JSON object:
-{"summary": "2-3 plain sentences on how well the company fits this investor's approach, written neutrally",
- "checklist": { "<id>": {"verdict": "yes|partly|no|unknown", "evidence": "one specific sentence"} } for EVERY id below:
-${items}
+{"summaries": { "<framework id>": "2-3 plain sentences on how well the company fits this investor's approach, written neutrally" } for EVERY framework below:
+${fws.map(f=>`   "${f.id}": ${f.name} (${f.source})`).join("\n")}
+ "checklist": { "<id>": {"verdict": "yes|partly|no|unknown", "evidence": "one specific sentence"} } for EVERY id below (each question is shared by the frameworks that ask it):
+${[...seen].map(([id,q])=>`   "${id}": ${q}`).join("\n")}
  "asOf": "YYYY-MM"}`;
+}
+// one framework's answers, put together from the shared answers and the Research
+function fwResult(fw, res){
+  const all=(RS.fwRes||{}).all; if(!all) return null;
+  const ck={}, rc=(res&&res.checklist)||{}, pp=res&&res.pricingPower;
+  for(const i of fw.groups.flatMap(g=>g.items)){ const id=fwSame(i);
+    ck[i[0]]= id==="pricing"? (pp&&pp.rating? {verdict:{strong:"yes",moderate:"partly",weak:"no"}[pp.rating]||"unknown", evidence:pp.evidence} : undefined)
+            : CHECK_IDS.has(id)? rc[id] : (all.checklist||{})[id]; }
+  return {summary:(all.summaries||{})[fw.id], checklist:ck};
 }
 // tests that can be worked out from SEC figures
 function calcCheck(kind, m){
@@ -2232,7 +2278,7 @@ function renderChecklist(res, selfM){
   const fw=fwById(RS.fwId||"mine"), mine=fw.id==="mine";
   const fin=financialChecks(selfM);
   const groups= mine? CHECK_GROUPS.map(g=>({g:g.g, intro:g.intro, note:g.note, items:g.items.map(i=>[i[0],i[1],i[2],CHECK_KEY.has(i[0]),null])})) : fw.groups;
-  const fr= mine? null : (RS.fwRes||{})[fw.id];
+  const fr= mine? null : fwResult(fw, res);
   const given= mine? (res.checklist||{}) : ((fr&&fr.checklist)||{});
   $("ckTitle").textContent= mine? "Investing checklist" : fw.name+"'s framework";
   $("ckBy").textContent= mine? "Criteria inspired by David Gardner, Adam Khoo, the Motley Fool, Peter Lynch and Don Valentine. Assessed by Claude from public information, except the financial tests, which use SEC filings."
@@ -2259,17 +2305,17 @@ function renderChecklist(res, selfM){
   $("ckScore").innerHTML=`<b>${max? Math.round(tot/max*100) : 0}%</b><span>of ${mine?"the checklist":esc(fw.name.split(":")[0])+"'s criteria"} met (${tot.toFixed(1).replace(/\.0$/,"")} of ${max} points; key items count double)</span>`;
   $("ckGroups").innerHTML=html;
 }
-// apply a famous investor's framework (asks Claude once per company and framework; kept for 30 days)
+// apply the famous investors' frameworks (asks Claude once per company for all of them; kept for 30 days)
 async function evalFramework(t, fwId){
   const fw=fwById(fwId); if(fw.id==="mine") return;
-  RS.fwRes=RS.fwRes||{};
-  const key="fw/"+docId(t)+"~"+fw.id, db=await caps.db;
-  if(db){ try{ const r=await db.doc(key).get(); if(r.exists){ const v=r.data(); if(v&&v.checklist&&Date.now()-Date.parse(v.fetchedAt||0)<30*864e5){ RS.fwRes[fw.id]=v; return; } } }catch(e){} }
+  RS.fwRes=RS.fwRes||{}; if(RS.fwRes.all) return;
+  const key="fw/"+docId(t)+"~all", db=await caps.db;
+  if(db){ try{ const r=await db.doc(key).get(); if(r.exists){ const v=r.data(); if(v&&v.checklist&&v.summaries&&Date.now()-Date.parse(v.fetchedAt||0)<30*864e5){ RS.fwRes.all=v; return; } } }catch(e){} }
   const sample=await caps.sample; if(!sample) throw new Error("Frameworks aren't available right now. Try again later.");
-  let v; try{ v=await sample.json(fwPrompt(fw, (RS.res&&RS.res.name)||t, t)); }
+  let v; try{ v=await sample.json(fwPrompt((RS.res&&RS.res.name)||t, t)); }
   catch(e){ throw new Error(e&&(e.code==="timeout"||e.web)? e.message : "Claude couldn't apply this framework just now. Choose it again to retry."); }
-  if(!v||!v.checklist) throw new Error("Claude's reply couldn't be read. Choose the framework again to retry.");
-  v.fetchedAt=new Date().toISOString(); RS.fwRes[fw.id]=v;
+  if(!v||!v.checklist||!v.summaries) throw new Error("Claude's reply couldn't be read. Choose the framework again to retry.");
+  v.fetchedAt=new Date().toISOString(); RS.fwRes.all=v;
   if(db){ try{ await db.doc(key).set(v); }catch(e){} }
 }
 async function switchFramework(){
@@ -2278,8 +2324,8 @@ async function switchFramework(){
   const sm=(RS.cos.find(c=>c.self)||{}).m;
   renderChecklist(RS.res, sm);
   const fw=fwById(RS.fwId);
-  if(fw.id!=="mine" && !(RS.fwRes||{})[fw.id]){
-    $("ckLoading").innerHTML=`<span class="spin" aria-hidden="true"></span> Applying ${esc(fw.name.split(":")[0])}'s framework to ${esc(RS.res.name||RS.ticker)} (about 30 seconds)…`;
+  if(fw.id!=="mine" && !(RS.fwRes||{}).all){
+    $("ckLoading").innerHTML=`<span class="spin" aria-hidden="true"></span> Applying ${esc(fw.name.split(":")[0])}'s framework to ${esc(RS.res.name||RS.ticker)} (about a minute; this also prepares the other investors' frameworks)…`;
     try{ await evalFramework(RS.ticker, fw.id); }catch(e){ $("ckLoading").textContent=e.message; return; }
     if(RS.fwId===fw.id) renderChecklist(RS.res, sm);
   }
@@ -2621,7 +2667,7 @@ async function loadResearch(t, hintName){
   status(steps,2);
   try{ await pickShareLines(t, res, cos); }catch(e){}
   RS.res=res; RS.cos=cos; RS.ticker=t; RS.fwRes={}; RS.fwId=$("fwSel").value;
-  if(RS.fwId!=="mine"){ status([steps[0],steps[1],`Applying ${fwById(RS.fwId).name.split(":")[0]}'s framework (about 30 seconds)`],2); try{ await evalFramework(t, RS.fwId); }catch(e){} }
+  if(RS.fwId!=="mine"){ status([steps[0],steps[1],`Applying ${fwById(RS.fwId).name.split(":")[0]}'s framework (about a minute)`],2); try{ await evalFramework(t, RS.fwId); }catch(e){} }
   $("status").hidden=true; $("empty").hidden=true; $("result").hidden=true; $("fin").hidden=true; $("res").hidden=false;
   renderResearch();
 }
@@ -9034,7 +9080,7 @@ $("bar").addEventListener("submit", async ev=>{
   finally{ setBusy(false); }
 });
 
-window.RR_PROMPTS={researchPrompt, samplePrompt};   // used by tools/research-queue.mjs
+window.RR_PROMPTS={researchPrompt, samplePrompt, fwPrompt};   // used by tools/research-queue.mjs
 })();
 </script>
 

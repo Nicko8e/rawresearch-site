@@ -4,7 +4,8 @@
 //   node tools/research-queue.mjs next [N]
 //       Picks the next N prompts to answer and writes each to tools/work/<file>.prompt.txt (default N = 20):
 //         1. visitors' requests waiting in tools/queue.json, most-requested first;
-//         2. every company in tools/order-ranked.txt (largest market cap first) that has no Research or Valuation answer;
+//         2. every company in tools/order-ranked.txt (largest market cap first) that has no Research or Valuation answer
+//            (and, for the largest FRAMEWORKS_TOP, no investor-frameworks answer);
 //         3. once all are done, the oldest answers (older than 30 days), so the research stays current.
 //   node tools/research-queue.mjs save <file> <answer-file>
 //       Checks the answer and writes public/answers/<id>.json, which the website serves to everyone.
@@ -24,6 +25,8 @@ import path from "node:path";
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
 const WORK = path.join(ROOT, "tools/work"), ANSWERS = path.join(ROOT, "public/answers");
 const REFRESH_DAYS = 30, UNCLEAR_AT = 200, DEPLOY_EVERY_H = 2;
+const FRAMEWORKS_TOP = 100;   // the largest companies also get every investor framework (one prompt each) ahead of time
+const kindsFor = rank => rank < FRAMEWORKS_TOP ? ["research", "valuation", "frameworks"] : ["research", "valuation"];
 const die = m => { console.error("research-queue: " + m); process.exit(1); };
 const read = f => fs.existsSync(f) ? fs.readFileSync(f, "utf8") : "";
 const fileOf = id => id.replace(/\//g, "__"), idOf = file => file.replace(/__/g, "/");
@@ -34,6 +37,7 @@ function answerId(prompt) {
   let m;
   if (prompt.startsWith("You are a meticulous equity research assistant.") && (m = prompt.match(/ticker "([A-Z0-9._-]{1,40})"/))) return "valuation/" + m[1];
   if (prompt.startsWith("You are a careful equity research analyst. Assess the competitive advantages") && (m = prompt.match(/\(ticker ([A-Z0-9._-]{1,40})\)/))) return "research/" + m[1];
+  if (prompt.startsWith("You are a careful equity research analyst. Apply famous investors' frameworks") && (m = prompt.match(/\(ticker ([A-Z0-9._-]{1,40})\)/))) return "frameworks/" + m[1];
   return createHash("sha256").update(prompt, "utf8").digest("hex").slice(0, 40);
 }
 
@@ -65,7 +69,7 @@ async function promptsFor(items) {             // builds the page's own prompts,
   await page.route("**/*", r => r.request().url().startsWith("file:") ? r.continue() : r.abort());
   await page.goto("file://" + path.join(ROOT, "public/index.html"));
   const out = await page.evaluate(items => items.map(([kind, t, name]) =>
-    kind === "research" ? RR_PROMPTS.researchPrompt(t, name || undefined) : RR_PROMPTS.samplePrompt(t)), items);
+    kind === "research" ? RR_PROMPTS.researchPrompt(t, name || undefined) : kind === "frameworks" ? RR_PROMPTS.fwPrompt(name || undefined, t) : RR_PROMPTS.samplePrompt(t)), items);
   await browser.close();
   return out;
 }
@@ -86,15 +90,15 @@ if (cmd === "next") {
   const nm = names(), todo = [];
   const ord = order();
   for (let i = 0; i < ord.length && picked.length + todo.length < n; i++)
-    for (const kind of ["research", "valuation"])
-      if (picked.length + todo.length < n && !picked.some(p => p.id === `${kind}/${ord[i]}`) && !skip.has(`${kind}/${ord[i]}`) && !fs.existsSync(answerPath(`${kind}/${ord[i]}`)))
+    for (const kind of kindsFor(i))
+      if (picked.length + todo.length < n && !picked.some(p => p.id === `${kind}/${ord[i]}`) && !skip.has(`${kind}/${ord[i]}`) && !skip.has(`research/${ord[i]}`) && !fs.existsSync(answerPath(`${kind}/${ord[i]}`)))
         todo.push({kind, t: ord[i], why: `rank ${i + 1}`});
   if (picked.length + todo.length < n) {
     const old = [];
-    for (const t of ord) for (const kind of ["research", "valuation"]) {
+    ord.forEach((t, i) => { for (const kind of kindsFor(i)) {
       const at = answeredAt(`${kind}/${t}`);
       if (at && Date.now() - at > REFRESH_DAYS * 864e5) old.push({kind, t, at, why: "refresh"});
-    }
+    } });
     old.sort((x, y) => x.at - y.at);
     todo.push(...old.slice(0, n - picked.length - todo.length));
   }
@@ -119,6 +123,7 @@ if (cmd === "next") {
   if (!result || typeof result !== "object" || Array.isArray(result) || !Object.keys(result).length) die("the answer must be a non-empty JSON object");
   if (id.startsWith("research/") && !Array.isArray(result.competitors)) die('a Research answer needs a "competitors" array');
   if (id.startsWith("valuation/") && !Array.isArray(result.revenueHistory)) die('a Valuation answer needs a "revenueHistory" array');
+  if (id.startsWith("frameworks/") && !(result.checklist && result.summaries)) die('a frameworks answer needs "summaries" and "checklist" objects');
   fs.mkdirSync(path.dirname(answerPath(id)), {recursive: true});
   fs.writeFileSync(answerPath(id), JSON.stringify({id, answeredAt: new Date().toISOString(), by: "research routine", prompt, result}));
   console.log(`saved public/answers/${id}.json`);
@@ -149,7 +154,6 @@ if (cmd === "next") {
   }
   console.log(`pushed ${n} answer(s)${deploy ? "; the website will update in a few minutes" : " (published with the next deploy)"}`);
 } else if (cmd === "status") {
-  const ord = order(); let r = 0, v = 0;
-  for (const t of ord) { if (fs.existsSync(answerPath("research/" + t))) r++; if (fs.existsSync(answerPath("valuation/" + t))) v++; }
-  console.log(`${ord.length} companies: Research done for ${r}, Valuation done for ${v}.`);
+  const ord = order(), has = k => ord.filter(t => fs.existsSync(answerPath(`${k}/${t}`))).length;
+  console.log(`${ord.length} companies: Research done for ${has("research")}, Valuation done for ${has("valuation")}, investor frameworks for ${has("frameworks")} (of the largest ${FRAMEWORKS_TOP}).`);
 } else die("usage: next [N] | save <file> <answer-file> | commit [--deploy] | status");
