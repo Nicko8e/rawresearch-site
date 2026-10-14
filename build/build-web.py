@@ -167,6 +167,11 @@ async function fbSend(){
 html, n = re.subn(r'map\[e&&e\.code\]\|\|\(e&&e\.code==="timeout"\? e\.message : ', 'map[e&&e.code]||(e&&(e.code==="timeout"||e.web)? e.message : ', html)
 if n != 2: sys.exit(f"build-web: expected 2 generic request-failed messages, found {n}")
 
+# ---------- 2f. point visitors to the free Claude edition for deeper research ----------
+CLAUDE_EDITION = "https://claude.ai/artifact/UqgUFZYemAQZzJwwk7hRtW"
+replace_once('<p class="note" style="margin:0" id="resMeta"></p>',
+             '<p class="note" style="margin:0" id="resMeta"></p>\n        <p class="note" style="margin:4px 0 0">Want deeper research? <a href="%s" target="_blank" rel="noopener">Open RawResearch in Claude</a>. It runs on Claude\'s most capable models and is free with your own Claude account.</p>' % CLAUDE_EDITION)
+
 # ---------- 3. wording that pointed visitors to Claude ----------
 for old, new in [
     ("This view can't ask Claude for company data. Open the page in Claude, or ask Claude in chat to research this ticker for the tool.",

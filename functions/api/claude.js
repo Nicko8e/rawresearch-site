@@ -4,8 +4,13 @@
 // Spending is capped per day (DAILY_LIMIT_USD) and per visitor per hour (HOURLY_PER_VISITOR).
 import Anthropic from "@anthropic-ai/sdk";
 
-export const MODEL = "claude-opus-5-5";
-const USD_PER_INPUT_TOKEN = 4 / 1e6, USD_PER_OUTPUT_TOKEN = 20 / 1e6;   // Claude Opus 5.5 list prices
+// The model is a setting: add a MODEL variable in Cloudflare (Settings -> Variables) to change it without code.
+// Haiku 5.5 is the default because it costs about 1/40th of Opus 5.5.
+const DEFAULT_MODEL = "claude-haiku-5-5";
+// List prices in US$ per million tokens [input, output], used to estimate spend against DAILY_LIMIT_USD.
+const PRICES = {"claude-haiku-5-5": [0.10, 0.50], "claude-sonnet-5-5": [2, 10], "claude-opus-5-5": [4, 20], "claude-fable-5-1": [10, 50]};
+export const modelOf = env => (env.MODEL || DEFAULT_MODEL).trim();
+const priceOf = model => PRICES[model] || [10, 50];      // unknown model: assume the dearest, so the cap stays safe
 const CACHE_DAYS = 30;
 const MAX_PROMPT_CHARS = 40000;
 // Only the app's own prompts are accepted, so the endpoint can't be used as a general chatbot.
@@ -26,12 +31,12 @@ async function sha256(text) {
 }
 
 // The model settings, shared with /api/health so its test sends the same kind of request.
-export const requestOptions = () => ({
-  model: MODEL,
+// Opus, Sonnet and Fable get Anthropic's automatic fallback when a request is declined; Haiku has none.
+export const requestOptions = model => ({
+  model,
   max_tokens: 16000,
   output_config: {effort: "medium"},
-  betas: ["server-side-fallback-2026-07-01"],
-  fallbacks: "default",
+  ...(/haiku/.test(model) ? {} : {betas: ["server-side-fallback-2026-07-01"], fallbacks: "default"}),
 });
 
 // "400 invalid_request_error: <Anthropic's message>" -- short, and safe to show
@@ -54,6 +59,7 @@ export async function onRequestPost({request, env}) {
   if (typeof prompt !== "string" || !prompt || prompt.length > MAX_PROMPT_CHARS || !PROMPT_STARTS.some(p => prompt.startsWith(p)))
     return fail("bad_request", "This request isn't one the app makes.", 400);
 
+  const MODEL = modelOf(env);
   const key = "ai:" + await sha256(MODEL + "\n" + prompt);
   const hit = await env.KV.get(key, "json");
   if (hit) return json({result: hit, cached: true});
@@ -68,13 +74,13 @@ export async function onRequestPost({request, env}) {
   if (used >= perHour) return fail("rate_limited", "You've run a lot of new research this hour. Try again later.", 429);
   const spendKey = "spend:" + day, limit = Number(env.DAILY_LIMIT_USD || 5);
   const spent = Number(await env.KV.get(spendKey) || 0);
-  if (spent >= limit) return fail("rate_limited", "Today's research limit has been reached. Companies already researched still work; new ones can be researched tomorrow.", 429);
+  if (spent >= limit) return fail("daily_limit", "Today's research limit on this website has been reached. Companies already researched still work. To research a new one now, open RawResearch in Claude (free with your Claude account): https://claude.ai/artifact/UqgUFZYemAQZzJwwk7hRtW", 429);
   await env.KV.put(ipKey, String(used + 1), {expirationTtl: 7200});
 
   const client = new Anthropic({apiKey: env.ANTHROPIC_API_KEY, ...(env.ANTHROPIC_BASE_URL ? {baseURL: env.ANTHROPIC_BASE_URL} : {})});
   let msg;
   try {
-    msg = await client.beta.messages.create({...requestOptions(), messages: [{role: "user", content: prompt}]});
+    msg = await client.beta.messages.create({...requestOptions(MODEL), messages: [{role: "user", content: prompt}]});
   } catch (e) {
     // The reason is shown to the visitor (it never contains the key), so a setup problem can be seen and fixed.
     const why = `(${describe(e)})`;
@@ -86,7 +92,8 @@ export async function onRequestPost({request, env}) {
   }
 
   const u = msg.usage || {};
-  const cost = (u.input_tokens || 0) * USD_PER_INPUT_TOKEN + (u.output_tokens || 0) * USD_PER_OUTPUT_TOKEN;
+  const [pin, pout] = priceOf(MODEL);
+  const cost = ((u.input_tokens || 0) * pin + (u.output_tokens || 0) * pout) / 1e6;
   await env.KV.put(spendKey, String(Math.round((Number(await env.KV.get(spendKey) || 0) + cost) * 1e4) / 1e4), {expirationTtl: 40 * 86400});
 
   if (msg.stop_reason === "refusal") return fail("refused", "Claude declined this request.", 422);

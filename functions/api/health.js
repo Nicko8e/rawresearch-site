@@ -2,7 +2,7 @@
 // GET /api/health?test=1  ->  also sends Claude a one-word request and reports {test: "ok" | the error}.
 // Never shows the key itself. The test is limited to 20 a day so it can't run up costs.
 import Anthropic from "@anthropic-ai/sdk";
-import {MODEL, requestOptions, describe} from "./claude.js";
+import {modelOf, requestOptions, describe} from "./claude.js";
 
 const json = (body, status = 200) => new Response(JSON.stringify(body, null, 1), {status, headers: {"content-type": "application/json", "cache-control": "no-store"}});
 
@@ -14,7 +14,7 @@ export async function onRequestGet({request, env}) {
     dailyLimitUsd: Number(env.DAILY_LIMIT_USD || 5),
     hourlyPerVisitor: Number(env.HOURLY_PER_VISITOR || 15),
     spentTodayUsd: env.KV ? Number(await env.KV.get("spend:" + day) || 0) : null,
-    model: MODEL,
+    model: modelOf(env),
   };
   if (new URL(request.url).searchParams.get("test") && out.key) {
     const tk = "healthtest:" + day, n = env.KV ? Number(await env.KV.get(tk) || 0) : 0;
@@ -23,7 +23,7 @@ export async function onRequestGet({request, env}) {
       if (env.KV) await env.KV.put(tk, String(n + 1), {expirationTtl: 2 * 86400});
       try {
         const client = new Anthropic({apiKey: env.ANTHROPIC_API_KEY, ...(env.ANTHROPIC_BASE_URL ? {baseURL: env.ANTHROPIC_BASE_URL} : {})});
-        const msg = await client.beta.messages.create({...requestOptions(), max_tokens: 16, messages: [{role: "user", content: "Reply with the word ok."}]});
+        const msg = await client.beta.messages.create({...requestOptions(modelOf(env)), max_tokens: 16, messages: [{role: "user", content: "Reply with the word ok."}]});
         out.test = "ok";
         out.servedBy = msg.model;
       } catch (e) { out.test = describe(e); }
