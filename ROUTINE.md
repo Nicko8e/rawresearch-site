@@ -33,7 +33,8 @@ For each file `tools/work/<file>.prompt.txt` you were given:
   the answer's notes must say they are estimates.
 - Write only the JSON object to `tools/work/<file>.answer.json`, then run
   `node tools/research-queue.mjs save <file> tools/work/<file>.answer.json`. If it reports an error, fix the JSON
-  and save again. If a prompt can't be answered (for example the company no longer exists), run `node tools/research-queue.mjs skip <file>`.
+  and save again. If the ticker is a fund, ETF or trust rather than an operating company, or a prompt can't be
+  answered (for example the company no longer exists), run `node tools/research-queue.mjs skip <file>`.
 - Report which files were saved and which were skipped.
 
 Rules: change nothing outside `public/answers/` and `tools/work/`. Never put keys or passwords anywhere.
