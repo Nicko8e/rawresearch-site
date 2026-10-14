@@ -27,6 +27,10 @@ For each file `tools/work/<file>.prompt.txt` you were given:
 - Use web search to check current facts (latest fiscal year, revenue, share counts, management, competitors,
   analyst forecasts) where the prompt asks for current information. Never invent figures: where the prompt allows
   null, use null.
+- The owner's data rule: figures for companies that file with the SEC must be exact reported figures (SEC filings,
+  company releases) or calculated exactly from them, never recalled from memory, rounded or scaled. If you can't
+  check one, use null. Only companies that don't file with the SEC (private or foreign-only) may get estimates, and
+  the answer's notes must say they are estimates.
 - Write only the JSON object to `tools/work/<file>.answer.json`, then run
   `node tools/research-queue.mjs save <file> tools/work/<file>.answer.json`. If it reports an error, fix the JSON
   and save again. If a prompt can't be answered (for example the company no longer exists), run `node tools/research-queue.mjs skip <file>`.
