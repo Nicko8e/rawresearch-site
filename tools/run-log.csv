@@ -3,3 +3,4 @@ finished_utc,companies,answers,helper_tokens,stopped_by_usage_limit
 2026-10-14T09:00Z,9,18,657322,no
 2026-10-14T10:20Z,19 frameworks + 1 Research,20,692991,no
 2026-10-14T10:45Z,7 (NTES ASML JNJ GFI MA INTC PLTR; all three answers each),20,733818,no
+2026-10-14T10:20Z,0 (batch stopped by usage limit; 3 answers saved: COST CSCO research, KO valuation),3,unknown,yes
