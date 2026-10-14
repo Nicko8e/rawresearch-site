@@ -3,7 +3,7 @@
 name: research-queue
 on:
   schedule:
-    - cron: "40 */6 * * *"    # every 6 hours
+    - cron: "40 * * * *"      # every hour, so visitors' requests reach the next research run
   workflow_dispatch:
 permissions:
   contents: write

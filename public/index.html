@@ -2267,7 +2267,7 @@ async function evalFramework(t, fwId){
   if(db){ try{ const r=await db.doc(key).get(); if(r.exists){ const v=r.data(); if(v&&v.checklist&&Date.now()-Date.parse(v.fetchedAt||0)<30*864e5){ RS.fwRes[fw.id]=v; return; } } }catch(e){} }
   const sample=await caps.sample; if(!sample) throw new Error("Frameworks aren't available right now. Try again later.");
   let v; try{ v=await sample.json(fwPrompt(fw, (RS.res&&RS.res.name)||t, t)); }
-  catch(e){ throw new Error(e&&e.code==="timeout"? e.message : "Claude couldn't apply this framework just now. Choose it again to retry."); }
+  catch(e){ throw new Error(e&&(e.code==="timeout"||e.web)? e.message : "Claude couldn't apply this framework just now. Choose it again to retry."); }
   if(!v||!v.checklist) throw new Error("Claude's reply couldn't be read. Choose the framework again to retry.");
   v.fetchedAt=new Date().toISOString(); RS.fwRes[fw.id]=v;
   if(db){ try{ await db.doc(key).set(v); }catch(e){} }

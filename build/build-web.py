@@ -175,6 +175,10 @@ replace_once('<p class="note" style="margin:0" id="resMeta"></p>',
 # ---------- 2g. let the research routine build the exact prompts the page sends (tools/research-queue.mjs) ----------
 replace_once("\n})();\n</script>\n\n</body>", "\nwindow.RR_PROMPTS={researchPrompt, samplePrompt};   // used by tools/research-queue.mjs\n})();\n</script>\n\n</body>")
 
+# ---------- 2h. frameworks: show the site's message (e.g. "on the research list") instead of a generic retry ----------
+replace_once("""catch(e){ throw new Error(e&&e.code==="timeout"? e.message : "Claude couldn't apply this framework just now. Choose it again to retry."); }""",
+             """catch(e){ throw new Error(e&&(e.code==="timeout"||e.web)? e.message : "Claude couldn't apply this framework just now. Choose it again to retry."); }""")
+
 # ---------- 3. wording that pointed visitors to Claude ----------
 for old, new in [
     ("This view can't ask Claude for company data. Open the page in Claude, or ask Claude in chat to research this ticker for the tool.",
