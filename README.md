@@ -59,6 +59,6 @@ In Cloudflare, go to **R2 → ivd-sec-data → Settings**:
 3. Upload the changed `public/index.html` to the repository. Cloudflare redeploys by itself.
 
 ## Notes
-- The model is Claude Opus 5.5 at medium effort, with Anthropic's automatic fallback when a request is declined. Spending is estimated from token counts at list prices ($4 input and $20 output per million tokens).
+- The model is Claude Haiku 5.5 at medium effort (about 1/40th the cost of Opus 5.5). To change it, add a `MODEL` variable in Cloudflare, e.g. `claude-opus-5-5`, and retry the deployment. Spending is estimated from token counts at list prices.
 - On Cloudflare's free plan, each request gets a small CPU-time allowance. If research requests fail with "exceeded CPU" errors in the Pages logs, switch to Workers Paid ($5 a month).
 - Notes are kept in each visitor's browser only. The website has no sign-in yet, so public notes are off.
