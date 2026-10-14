@@ -49,19 +49,36 @@ export function describe(e) {
   return text.trim().slice(0, 300);
 }
 
-// A prompt's id: the first 40 hex digits of its SHA-256. tools/research-queue.mjs computes the same.
-export const answerId = async prompt => (await sha256(prompt)).slice(0, 40);
+// A prompt's id, which names its answer file public/answers/<id>.json. tools/research-queue.mjs computes the same.
+// The two main prompts are keyed by company, so the routine can research every company ahead of time:
+//   "valuation/<TICKER>" (Valuation tab) and "research/<TICKER>" (Research tab).
+// Any other prompt is keyed by the first 40 hex digits of its SHA-256.
+export async function answerId(prompt) {
+  let m;
+  if (prompt.startsWith("You are a meticulous equity research assistant.") && (m = prompt.match(/ticker "([A-Z0-9._-]{1,40})"/))) return "valuation/" + m[1];
+  if (prompt.startsWith("You are a careful equity research analyst. Assess the competitive advantages") && (m = prompt.match(/\(ticker ([A-Z0-9._-]{1,40})\)/))) return "research/" + m[1];
+  return (await sha256(prompt)).slice(0, 40);
+}
 
 // The routine's saved answer, if there is one. Pages serves index.html for missing files, so check it's JSON.
-export async function savedAnswer(request, env, id) {
+async function assetJSON(request, env, file) {
   if (!env.ASSETS) return null;
-  const r = await env.ASSETS.fetch(new URL(`/answers/${id}.json`, request.url));
+  const r = await env.ASSETS.fetch(new URL(file, request.url));
   if (!r.ok || !(r.headers.get("content-type") || "").includes("json")) return null;
-  try { return (await r.json()).result || null; } catch { return null; }
+  try { return await r.json(); } catch { return null; }
+}
+// Another share class of a researched company (GOOG for GOOGL) uses that company's answer: answers/aliases.json.
+export async function savedAnswer(request, env, id) {
+  const hit = await assetJSON(request, env, `/answers/${id}.json`);
+  if (hit) return hit.result || null;
+  const m = id.match(/^(research|valuation)\/(.+)$/);
+  if (!m) return null;
+  const alias = ((await assetJSON(request, env, "/answers/aliases.json")) || {})[m[2]];
+  return alias ? ((await assetJSON(request, env, `/answers/${m[1]}/${alias}.json`)) || {}).result || null : null;
 }
 
 const CLAUDE_EDITION = "https://claude.ai/artifact/UqgUFZYemAQZzJwwk7hRtW";
-const QUEUED = `This hasn't been researched yet. It's now on the research list, which runs once a day, so check back tomorrow. To research it right now, open RawResearch in Claude (free with your Claude account): ${CLAUDE_EDITION}`;
+const QUEUED = `This hasn't been researched yet. It's now at the front of the research list, so check back later today or tomorrow. To research it right now, open RawResearch in Claude (free with your Claude account): ${CLAUDE_EDITION}`;
 
 async function enqueue(request, env, id, prompt) {
   const k = "q:" + id, now = new Date().toISOString(), old = await env.KV.get(k, "json");

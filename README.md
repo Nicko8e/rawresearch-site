@@ -5,7 +5,7 @@ The RawResearch app as a public website, hosted on Cloudflare Pages.
 | Path | What it is |
 |---|---|
 | `public/index.html` | The app page. Generated, so don't edit it by hand. |
-| `functions/api/claude.js` | `/api/claude`: answers the app's research prompts from `public/answers/` (written once a day by the research routine on your Claude subscription, see `ROUTINE.md`). Anything not answered yet joins the research queue and the visitor is told to check back tomorrow. Live research on an Anthropic API key runs only if you set `LIVE_RESEARCH` to `on`. |
+| `functions/api/claude.js` | `/api/claude`: answers the app's research prompts from `public/answers/` (written by the hourly research routine on your Claude subscription, which works through every company largest first; see `ROUTINE.md`). Anything not answered yet joins the research queue and the visitor is told to check back tomorrow. Live research on an Anthropic API key runs only if you set `LIVE_RESEARCH` to `on`. |
 | `functions/api/queue.js` | `/api/queue`: the research visitors asked for that has no answer yet, most-requested first. |
 | `tools/research-queue.mjs`, `ROUTINE.md` | The daily routine's helper and steps. |
 | `functions/api/price.js` | `/api/price`: latest share price from Yahoo Finance, with Stooq as a backup. |

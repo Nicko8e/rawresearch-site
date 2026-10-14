@@ -172,6 +172,9 @@ CLAUDE_EDITION = "https://claude.ai/artifact/UqgUFZYemAQZzJwwk7hRtW"
 replace_once('<p class="note" style="margin:0" id="resMeta"></p>',
              '<p class="note" style="margin:0" id="resMeta"></p>\n        <p class="note" style="margin:4px 0 0">Want deeper research? <a href="%s" target="_blank" rel="noopener">Open RawResearch in Claude</a>. It runs on Claude\'s most capable models and is free with your own Claude account.</p>' % CLAUDE_EDITION)
 
+# ---------- 2g. let the research routine build the exact prompts the page sends (tools/research-queue.mjs) ----------
+replace_once("\n})();\n</script>\n\n</body>", "\nwindow.RR_PROMPTS={researchPrompt, samplePrompt};   // used by tools/research-queue.mjs\n})();\n</script>\n\n</body>")
+
 # ---------- 3. wording that pointed visitors to Claude ----------
 for old, new in [
     ("This view can't ask Claude for company data. Open the page in Claude, or ask Claude in chat to research this ticker for the tool.",

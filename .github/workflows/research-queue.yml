@@ -1,9 +1,9 @@
-# Copies the website's research queue into the repository once a day (tools/queue.json), so the daily research
-# routine (ROUTINE.md) can read it from GitHub. "[CI Skip]" stops Cloudflare rebuilding the site for this commit.
+# Copies the website's research queue (tools/queue.json) and the SEC company list (tools/companies.csv) into the
+# repository, so the research routine (ROUTINE.md) can read them from GitHub. "[CI Skip]" stops Cloudflare rebuilding the site for this commit.
 name: research-queue
 on:
   schedule:
-    - cron: "40 2 * * *"      # 02:40 UTC, before the routine at 03:10 UTC
+    - cron: "40 */6 * * *"    # every 6 hours
   workflow_dispatch:
 permissions:
   contents: write
@@ -17,9 +17,11 @@ jobs:
           curl -fsS https://companyresearch.io/api/queue -o tools/queue.json.new
           python3 -c "import json; json.load(open('tools/queue.json.new'))"
           mv tools/queue.json.new tools/queue.json
+      - name: Download the SEC company list (names and SEC numbers for the routine)
+        run: curl -fsS https://data.companyresearch.io/sheet/balance_sheet.csv -o tools/companies.csv
       - name: Commit if it changed
         run: |
-          git add tools/queue.json
+          git add tools/queue.json tools/companies.csv
           if git diff --cached --quiet; then echo "queue unchanged"; exit 0; fi
           git -c user.name="research-queue" -c user.email="actions@users.noreply.github.com" commit -m "Research queue $(date -u +%F) [CI Skip]"
-          git push
+          git pull --rebase origin main && git push
