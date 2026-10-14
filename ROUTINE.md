@@ -3,8 +3,10 @@
 A scheduled Claude task runs this once a day on the site owner's Claude subscription. It answers the research
 visitors asked for and commits the answers, so the website serves them free to everyone.
 
-1. In this repository, run `node tools/research-queue.mjs fetch 25`. It lists up to 25 prompts, most-requested first,
-   and writes each to `tools/work/<id>.prompt.txt`. If it says 0 prompts, stop: there's nothing to do.
+1. In this repository (latest `main`), run `node tools/research-queue.mjs fetch 25 tools/queue.json`. A GitHub Action
+   copies the website's queue into `tools/queue.json` at 02:40 UTC each day (if the routine can reach
+   companyresearch.io directly, `node tools/research-queue.mjs fetch 25` reads it live instead). It lists up to 25
+   prompts, most-requested first, and writes each to `tools/work/<id>.prompt.txt`. If it says 0 prompts, stop.
 2. For each prompt file, in order:
    - Read the whole prompt and answer it exactly as it asks, as a careful equity research analyst would. It asks for
      one JSON object with a given shape; keep every field name and type it specifies.
