@@ -1,7 +1,10 @@
 // POST /api/claude  {prompt}  ->  {result}  (the JSON object Claude replied with)
-// Runs the app's research prompts on the site owner's Anthropic API key.
-// Every answer is saved in KV by prompt, so each company is paid for once and later visitors get it instantly.
-// Spending is capped per day (DAILY_LIMIT_USD) and per visitor per hour (HOURLY_PER_VISITOR).
+// Answers come from, in order:
+//   1. public/answers/<id>.json -- written once a day by the research routine on the owner's Claude subscription (see ROUTINE.md);
+//   2. the KV cache of earlier live answers;
+//   3. live research on the owner's Anthropic API key, only when the LIVE_RESEARCH variable is "on".
+// Otherwise the prompt joins the research queue (KV "q:<id>", read by GET /api/queue) and the visitor is told to check back tomorrow.
+// Live spending is capped per day (DAILY_LIMIT_USD) and per visitor per hour (HOURLY_PER_VISITOR).
 import Anthropic from "@anthropic-ai/sdk";
 
 // The model is a setting: add a MODEL variable in Cloudflare (Settings -> Variables) to change it without code.
@@ -46,6 +49,32 @@ export function describe(e) {
   return text.trim().slice(0, 300);
 }
 
+// A prompt's id: the first 40 hex digits of its SHA-256. tools/research-queue.mjs computes the same.
+export const answerId = async prompt => (await sha256(prompt)).slice(0, 40);
+
+// The routine's saved answer, if there is one. Pages serves index.html for missing files, so check it's JSON.
+export async function savedAnswer(request, env, id) {
+  if (!env.ASSETS) return null;
+  const r = await env.ASSETS.fetch(new URL(`/answers/${id}.json`, request.url));
+  if (!r.ok || !(r.headers.get("content-type") || "").includes("json")) return null;
+  try { return (await r.json()).result || null; } catch { return null; }
+}
+
+const CLAUDE_EDITION = "https://claude.ai/artifact/UqgUFZYemAQZzJwwk7hRtW";
+const QUEUED = `This hasn't been researched yet. It's now on the research list, which runs once a day, so check back tomorrow. To research it right now, open RawResearch in Claude (free with your Claude account): ${CLAUDE_EDITION}`;
+
+async function enqueue(request, env, id, prompt) {
+  const k = "q:" + id, now = new Date().toISOString(), old = await env.KV.get(k, "json");
+  if (!old) {                                     // a new entry: limit how many one visitor can add per hour
+    const ip = request.headers.get("cf-connecting-ip") || "unknown", ipKey = `qip:${ip}:${now.slice(0, 13)}`;
+    const n = Number(await env.KV.get(ipKey) || 0);
+    if (n >= Number(env.HOURLY_PER_VISITOR || 15)) return false;
+    await env.KV.put(ipKey, String(n + 1), {expirationTtl: 7200});
+  }
+  await env.KV.put(k, JSON.stringify({prompt, first: old ? old.first : now, last: now, count: (old ? old.count : 0) + 1}), {expirationTtl: 60 * 86400});
+  return true;
+}
+
 function parseReply(text) {
   const s = text.indexOf("{"), e = text.lastIndexOf("}");
   if (s < 0 || e <= s) return null;
@@ -59,12 +88,19 @@ export async function onRequestPost({request, env}) {
   if (typeof prompt !== "string" || !prompt || prompt.length > MAX_PROMPT_CHARS || !PROMPT_STARTS.some(p => prompt.startsWith(p)))
     return fail("bad_request", "This request isn't one the app makes.", 400);
 
+  const id = await answerId(prompt);
+  const saved = await savedAnswer(request, env, id);
+  if (saved) return json({result: saved, cached: true});
+
   const MODEL = modelOf(env);
   const key = "ai:" + await sha256(MODEL + "\n" + prompt);
   const hit = await env.KV.get(key, "json");
   if (hit) return json({result: hit, cached: true});
 
-  if (!env.ANTHROPIC_API_KEY) return fail("not_configured", "Research isn't switched on for this site yet.", 503);
+  if (env.LIVE_RESEARCH !== "on" || !env.ANTHROPIC_API_KEY) {
+    if (!await enqueue(request, env, id, prompt)) return fail("rate_limited", "You've asked for a lot of new research this hour. Try again later.", 429);
+    return fail("queued", QUEUED, 202);
+  }
 
   // limits: per visitor per hour, then the site-wide daily budget
   const now = new Date(), day = now.toISOString().slice(0, 10), hour = now.toISOString().slice(0, 13);
@@ -74,7 +110,10 @@ export async function onRequestPost({request, env}) {
   if (used >= perHour) return fail("rate_limited", "You've run a lot of new research this hour. Try again later.", 429);
   const spendKey = "spend:" + day, limit = Number(env.DAILY_LIMIT_USD || 5);
   const spent = Number(await env.KV.get(spendKey) || 0);
-  if (spent >= limit) return fail("daily_limit", "Today's research limit on this website has been reached. Companies already researched still work. To research a new one now, open RawResearch in Claude (free with your Claude account): https://claude.ai/artifact/UqgUFZYemAQZzJwwk7hRtW", 429);
+  if (spent >= limit) {
+    await enqueue(request, env, id, prompt);
+    return fail("queued", QUEUED, 202);
+  }
   await env.KV.put(ipKey, String(used + 1), {expirationTtl: 7200});
 
   const client = new Anthropic({apiKey: env.ANTHROPIC_API_KEY, ...(env.ANTHROPIC_BASE_URL ? {baseURL: env.ANTHROPIC_BASE_URL} : {})});

@@ -15,6 +15,7 @@ export async function onRequestGet({request, env}) {
     hourlyPerVisitor: Number(env.HOURLY_PER_VISITOR || 15),
     spentTodayUsd: env.KV ? Number(await env.KV.get("spend:" + day) || 0) : null,
     model: modelOf(env),
+    liveResearch: env.LIVE_RESEARCH === "on",
   };
   if (new URL(request.url).searchParams.get("test") && out.key) {
     const tk = "healthtest:" + day, n = env.KV ? Number(await env.KV.get(tk) || 0) : 0;
