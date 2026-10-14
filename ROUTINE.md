@@ -8,7 +8,7 @@ it left off, because the work list is worked out from the answers already saved.
 ## Each run
 
 1. In this repository, `git pull --rebase origin main`.
-2. Repeat until about 3 hours have passed or usage runs out:
+2. Repeat, batch after batch, until usage runs out (the owner wants as many companies as the plan allows):
    1. `node tools/research-queue.mjs next 20` writes the next 20 prompts to `tools/work/<file>.prompt.txt`:
       visitors' requests first, then every company largest first (Research and Valuation), then refreshes of
       answers older than 30 days. If it says 0 prompts, everything is done: stop.
@@ -16,7 +16,7 @@ it left off, because the work list is worked out from the answers already saved.
       instructions under "Answering a prompt" below and its list of files.
    3. `node tools/research-queue.mjs commit` commits and pushes what was saved. The site rebuilds at most every
       2 hours; other pushes wait for the next rebuild.
-3. End with `node tools/research-queue.mjs commit --deploy`, then `node tools/research-queue.mjs status`, and put the
+3. If you're stopping for any other reason, end with `node tools/research-queue.mjs commit --deploy`, then `node tools/research-queue.mjs status`, and put the
    status line in the thread's status checklist. Reply in the thread only if something failed or the owner must act.
 
 ## Answering a prompt
