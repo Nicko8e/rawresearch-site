@@ -2200,7 +2200,37 @@ const FRAMEWORKS=[
    ["va2","Solves a big, real problem","Does the product solve a large, painful problem?",true],
    ["va3","Right timing","Is the technology and market timing right?"],
    ["va4","Clear, focused founders","Do the leaders have a clear, focused vision?"],
-   ["va5","Capital efficient","Does it grow without needing endless outside money?",false,"fcf"]]}]}
+   ["va5","Capital efficient","Does it grow without needing endless outside money?",false,"fcf"]]}]},
+ {id:"nash", name:"Tom Nash: the 12-step research process", by:"Tom Nash, creator of Stock MVP. Every step is pass or fail: fail one and the company is “off the island”", source:"“How to Find the Best Stocks in the Market” (Tom Nash, 2026)", groups:[
+  {g:"Steps 1–5: trend, sanity check, pre-screen, business, market", items:[
+   ["tn1","A real secular trend, and built for it from day one","Does it sell into a real secular trend (like AI, energy or robotics; ideally the infrastructure layer), as a company built for that trend rather than an old business retrofitting?",true],
+   ["tn2","The market has it wrong","Is there a gap between the story the market tells about the company and what it is actually becoming (like Palantir seen as a consultancy, Tesla as a car company)?",true],
+   ["tn3","Outside the zones to skip","Is it outside the zones to avoid: small caps, Chinese companies, commodity producers, airlines, seasonal businesses and startups?",true],
+   ["tn4","Sanity check: passes two of three","Of these three, does it pass at least two (and have a valid reason for any miss, such as infrastructure needing leverage or a clear path to profit): revenue grown for the past few years, profitable, more cash than debt?"],
+   ["tn5","Pre-screen: free cash flow and net cash for 4–6 quarters","Has free cash flow been positive, and cash exceeded debt, in each of the last 4 to 6 quarters?",true],
+   ["tn6","Revenue growing 10% or more","Is revenue growing at 10% a year or more?"],
+   ["tn7","Rule of 40","Is revenue growth % plus free-cash-flow margin % at least 40?"],
+   ["tn8","Scalable: revenue grows faster than expenses","Over the last year, did revenue grow faster than total operating expenses?"],
+   ["tn9","No instant kills","Does it avoid every instant kill: market cap under $1B, more debt than cash, short interest above 10%, operating margin below 20%, revenue growth below 10% and falling, two or more earnings misses in the last 4 quarters, or less than 10 years since founding?",true],
+   ["tn10","No major regulatory or legal overhang","Is it free of any major regulatory or legal threat?"],
+   ["tn11","The business fits in one clean sentence","Can it be stated plainly as “provides X that helps Y achieve Z, and charges [revenue model]”, with a clear answer to what pain it cures, who is in pain, and why customers choose it over competitors?"],
+   ["tn12","A broad market, big enough for the growth","Does it sell into a broad (not niche) market large enough to support the growth investors are betting on?"]]},
+  {g:"Steps 6–9: scorecard, 5-year history, balance sheet, moat", items:[
+   ["tn13","125-point scorecard of 75 or more","Score it on Nash's 13 categories, 0, 5 or 10 each, using the last twelve months: cash vs debt, revenue growth, operating margin, short interest, institutional ownership, revenue growing faster than expenses, 5-year return vs the S&P 500, moat, CEO, recession-proof pricing power, secular trend, culture and mission, talent. Is the total 75 or more? Give the total in the evidence.",true],
+   ["tn14","Five years: revenue, margins and free cash flow all rising","Over the last five years, has revenue grown every year, operating margin expanded, free cash flow been positive and rising, and cash exceeded debt every year?"],
+   ["tn15","Loan Officer Test","Would a banker lend to it: interest coverage (operating income ÷ interest) of 4x or more, assets (excluding goodwill) at least 2× liabilities, current ratio of 1 or more, and total liabilities under 4× equity?"],
+   ["tn16","A moat that is getting stronger","Does it have at least one of network effects, technology and patents, switching costs, scale, regulation or brand, getting stronger over time and hard to copy even with 20 engineers for each of theirs?",true],
+   ["tn17","Operating margin proves pricing power","Is its operating margin high enough to prove pricing power?"]]},
+  {g:"Steps 10–12: management, try to kill it, valuation", items:[
+   ["tn18","A CEO who amazes","Does the CEO have a track record of execution (growth, margins, innovation), skin in the game through open-market share purchases, and 10+ years in the role, ideally as founder?",true],
+   ["tn19","Disciplined capital allocation and straight answers","Is management disciplined with buybacks, debt and acquisitions, and candid even when the news is bad?"],
+   ["tn20","Consistent earnings beats","Has it consistently beaten earnings expectations?"],
+   ["tn21","No red flags","Is it free of every red flag: a clown CEO, a co-CEO structure, an acquisition spree, any suspicion of fraud or accounting problems, an auditor change, declining margins, revenue spiking while inventory piles up, or insiders selling hard while the stock runs?",true],
+   ["tn22","Not a hype trap","Does it avoid the hype trap of no revenue, weak fundamentals, constant share sales to raise cash and nonstop media hype?"],
+   ["tn23","The bear case is survivable","After writing the strongest bear case (3 to 5 reasons the thesis is wrong), can you live with it?"],
+   ["tn24","Reverse DCF: price implies less growth than it delivers","Working back from today's price, is the growth the price implies below what the company is already delivering?",true],
+   ["tn25","Even the bear-case DCF is attractive","With Nash's DCF (3-year averages of revenue growth and FCF margin, trimmed growth, 5 years of free cash flow, 4% terminal growth, plus cash minus debt), is the value per share above today's price even at a 12% discount rate?",true],
+   ["tn26","The right multiple looks cheap","Using the multiple that fits (forward P/E vs peers for mature companies, hardware and banks; Rule of 40 for software; price to sales vs the industry for unprofitable growth), is it attractive, with a PEG (forward P/E ÷ EPS growth) of 1 or less?"]]}]}
 ];
 function fwById(id){ return FRAMEWORKS.find(f=>f.id===id)||FRAMEWORKS[0]; }
 /* Many investors ask the same thing in different words, so each question is researched once per company and shared by every
@@ -2214,7 +2244,8 @@ const FW_SAME={
   ns2:"runway", ly6:"runway", fi1:"runway", b1:"simple", mu1:"simple", pa1:"simple",
   b11:"safety", pa5:"safety", gb3:"safety", mu2:"fairprice", ak4:"fairprice", ge7:"fairprice", sm7:"fcfyield", ac6:"fcfyield",
   g3:"momentum", dr5:"momentum", th2:"timing", va3:"timing", ge4:"team", th4:"team", ge1:"trend", dr3:"trend",
-  fi7:"longterm", ns3:"longterm", wo5:"longterm"};
+  fi7:"longterm", ns3:"longterm", wo5:"longterm",
+  tn12:"c7", tn16:"c2", tn17:"pricing", tn19:"integrity", tn23:"mu5"};
 const FW_SHARED={
   integrity:"Is management honest and candid with shareholders, rational with capital, paid in a way that lines up with owners, and well governed?",
   durable:"Will its market position still hold in 10 to 20 years, resisting disruption and obsolescence?",
@@ -2310,7 +2341,7 @@ async function evalFramework(t, fwId){
   const fw=fwById(fwId); if(fw.id==="mine") return;
   RS.fwRes=RS.fwRes||{}; if(RS.fwRes.all) return;
   const key="fw/"+docId(t)+"~all", db=await caps.db;
-  if(db){ try{ const r=await db.doc(key).get(); if(r.exists){ const v=r.data(); if(v&&v.checklist&&v.summaries&&Date.now()-Date.parse(v.fetchedAt||0)<30*864e5){ RS.fwRes.all=v; return; } } }catch(e){} }
+  if(db){ try{ const r=await db.doc(key).get(); if(r.exists){ const v=r.data(); if(v&&v.checklist&&v.summaries&&FRAMEWORKS.every(f=>!f.groups||v.summaries[f.id])&&Date.now()-Date.parse(v.fetchedAt||0)<30*864e5){ RS.fwRes.all=v; return; } } }catch(e){} }
   const sample=await caps.sample; if(!sample) throw new Error("Frameworks aren't available right now. Try again later.");
   let v; try{ v=await sample.json(fwPrompt((RS.res&&RS.res.name)||t, t)); }
   catch(e){ throw new Error(e&&(e.code==="timeout"||e.web)? e.message : "Claude couldn't apply this framework just now. Choose it again to retry."); }

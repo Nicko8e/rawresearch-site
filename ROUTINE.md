@@ -34,6 +34,8 @@ For each file `tools/work/<file>.prompt.txt` you were given:
   company releases) or calculated exactly from them, never recalled from memory, rounded or scaled. If you can't
   check one, use null. Only companies that don't file with the SEC (private or foreign-only) may get estimates, and
   the answer's notes must say they are estimates.
+- If `tools/work/<file>.update.txt` exists, the company already has an answer and only new questions were added:
+  follow that file and answer only the entries it lists, keeping everything else as it is.
 - Write only the JSON object to `tools/work/<file>.answer.json`, then run
   `node tools/research-queue.mjs save <file> tools/work/<file>.answer.json`. If it reports an error, fix the JSON
   and save again. If the ticker is a fund, ETF or trust rather than an operating company, or a prompt can't be

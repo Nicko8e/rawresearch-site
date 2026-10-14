@@ -84,11 +84,26 @@ if (cmd === "next") {
   for (const it of (q ? JSON.parse(q).items : []) || []) {
     if (picked.length >= n) break;
     if (typeof it.prompt !== "string" || answerId(it.prompt) !== it.id || fs.existsSync(answerPath(it.id)) || skip.has(it.id)) continue;
+    if (/^You are a careful equity research analyst\. Apply (?!famous investors' frameworks)/.test(it.prompt)) continue;   // one framework at a time: replaced by frameworks/<TICKER>
     picked.push({id: it.id, prompt: it.prompt, why: `requested ${it.count}x`});
   }
-  // 2. every company, largest first; 3. then the oldest answers
   const nm = names(), todo = [];
   const ord = order();
+  // 1b. frameworks answers saved before a framework was added: ask only the new questions (tools/work/<file>.update.txt)
+  const fwOld = ord.slice(0, FRAMEWORKS_TOP).filter(t => fs.existsSync(answerPath(`frameworks/${t}`)));
+  if (fwOld.length && picked.length < n) {
+    const ps = await promptsFor(fwOld.map(t => ["frameworks", t, nm.get(t)]));
+    fwOld.forEach((t, i) => {
+      if (picked.length >= n) return;
+      const r = JSON.parse(read(answerPath(`frameworks/${t}`))).result || {}, [sums, cks] = ps[i].split('"checklist"');
+      const ids = re => [...re.matchAll(/^   "([A-Za-z0-9]+)":/gm)].map(m => m[1]);
+      const need = [...ids(sums).filter(id => !(r.summaries || {})[id]).map(id => `summaries.${id}`),
+                    ...ids(cks).filter(id => !(r.checklist || {})[id]).map(id => `checklist.${id}`)];
+      if (need.length) picked.push({id: `frameworks/${t}`, prompt: ps[i], why: `add ${need.length} new answers`,
+        update: `This company already has an answer: public/answers/frameworks/${t}.json. Keep its "result" exactly as it is and add only these missing entries (the prompt says what each one asks), then save the whole object:\n${need.join("\n")}\n`});
+    });
+  }
+  // 2. every company, largest first; 3. then the oldest answers
   for (let i = 0; i < ord.length && picked.length + todo.length < n; i++)
     for (const kind of kindsFor(i))
       if (picked.length + todo.length < n && !picked.some(p => p.id === `${kind}/${ord[i]}`) && !skip.has(`${kind}/${ord[i]}`) && !skip.has(`research/${ord[i]}`) && !fs.existsSync(answerPath(`${kind}/${ord[i]}`)))
@@ -108,6 +123,7 @@ if (cmd === "next") {
   }
   for (const p of picked) {
     fs.writeFileSync(path.join(WORK, fileOf(p.id) + ".prompt.txt"), p.prompt);
+    if (p.update) fs.writeFileSync(path.join(WORK, fileOf(p.id) + ".update.txt"), p.update);
     console.log(`${fileOf(p.id)}  (${p.why})`);
   }
   console.log(`${picked.length} prompt(s) to answer in tools/work/`);
