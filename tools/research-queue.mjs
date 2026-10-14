@@ -4,8 +4,8 @@
 //   node tools/research-queue.mjs next [N]
 //       Picks the next N prompts to answer and writes each to tools/work/<file>.prompt.txt (default N = 20):
 //         1. visitors' requests waiting in tools/queue.json, most-requested first;
-//         2. every company in tools/order-ranked.txt (largest market cap first) that has no Research or Valuation answer
-//            (and, for the largest FRAMEWORKS_TOP, no investor-frameworks answer);
+//         2. every company in tools/order-ranked.txt (largest market cap first) that has no Research, Valuation or
+//            investor-frameworks answer;
 //         3. once all are done, the oldest answers (older than 30 days), so the research stays current.
 //   node tools/research-queue.mjs save <file> <answer-file>
 //       Checks the answer and writes public/answers/<id>.json, which the website serves to everyone.
@@ -25,8 +25,9 @@ import path from "node:path";
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
 const WORK = path.join(ROOT, "tools/work"), ANSWERS = path.join(ROOT, "public/answers");
 const REFRESH_DAYS = 30, UNCLEAR_AT = 200, DEPLOY_EVERY_H = 2;
-const FRAMEWORKS_TOP = 100;   // the largest companies also get every investor framework (one prompt each) ahead of time
-const kindsFor = rank => rank < FRAMEWORKS_TOP ? ["research", "valuation", "frameworks"] : ["research", "valuation"];
+// Every company gets Research, Valuation and every investor framework (one combined prompt) ahead of time.
+const kindsFor = () => ["research", "valuation", "frameworks"];
+const FW_TOPUP_TOP = 100;     // frameworks answers saved before a framework was added are all in the largest 100
 const die = m => { console.error("research-queue: " + m); process.exit(1); };
 const read = f => fs.existsSync(f) ? fs.readFileSync(f, "utf8") : "";
 const fileOf = id => id.replace(/\//g, "__"), idOf = file => file.replace(/__/g, "/");
@@ -90,7 +91,7 @@ if (cmd === "next") {
   const nm = names(), todo = [];
   const ord = order();
   // 1b. frameworks answers saved before a framework was added: ask only the new questions (tools/work/<file>.update.txt)
-  const fwOld = ord.slice(0, FRAMEWORKS_TOP).filter(t => fs.existsSync(answerPath(`frameworks/${t}`)));
+  const fwOld = ord.slice(0, FW_TOPUP_TOP).filter(t => fs.existsSync(answerPath(`frameworks/${t}`)));
   if (fwOld.length && picked.length < n) {
     const ps = await promptsFor(fwOld.map(t => ["frameworks", t, nm.get(t)]));
     fwOld.forEach((t, i) => {
@@ -171,5 +172,5 @@ if (cmd === "next") {
   console.log(`pushed ${n} answer(s)${deploy ? "; the website will update in a few minutes" : " (published with the next deploy)"}`);
 } else if (cmd === "status") {
   const ord = order(), has = k => ord.filter(t => fs.existsSync(answerPath(`${k}/${t}`))).length;
-  console.log(`${ord.length} companies: Research done for ${has("research")}, Valuation done for ${has("valuation")}, investor frameworks for ${has("frameworks")} (of the largest ${FRAMEWORKS_TOP}).`);
+  console.log(`${ord.length} companies: Research done for ${has("research")}, Valuation done for ${has("valuation")}, investor frameworks for ${has("frameworks")}.`);
 } else die("usage: next [N] | save <file> <answer-file> | commit [--deploy] | status");

@@ -10,8 +10,8 @@ it left off, because the work list is worked out from the answers already saved.
 1. In this repository, `git pull --rebase origin main`.
 2. Repeat, batch after batch, until usage runs out (the owner wants as many companies as the plan allows):
    1. `node tools/research-queue.mjs next 20` writes the next 20 prompts to `tools/work/<file>.prompt.txt`:
-      visitors' requests first, then every company largest first (Research and Valuation, plus one prompt covering
-      every investor framework for the largest 100), then refreshes of
+      visitors' requests first, then every company largest first (Research, Valuation, and one prompt covering
+      every investor framework, for every company), then refreshes of
       answers older than 30 days. If it says 0 prompts, everything is done: stop.
    2. Split the prompt files between 5 helper agents (4 each) and run them in parallel. Give each helper the
       instructions under "Answering a prompt" below and its list of files.
