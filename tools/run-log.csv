@@ -11,3 +11,4 @@ finished_utc,companies,answers,helper_tokens,stopped_by_usage_limit
 2026-10-15T01:20Z,6 (JD NFLX MS HD ARM RY) + PM done + CRWD valuation - stopped by usage limit ~21:45 and resumed after 00:50 reset; tokens counted after the resume only,21,850224,yes
 2026-10-15T02:20Z,6 (GEV TXN GS ANET RTX NVS) + TMO research+valuation + PM frameworks top-up,21,849013,no
 2026-10-15T06:20Z,5 (WFC HSBC SAP MRVL BIDU) + TMO frameworks + SHOP research; CCZ skipped - stopped by usage limit ~02:30 and resumed after 05:50 reset; tokens counted after the resume only,17,730201,yes
+2026-10-15T06:20Z,6 (AMGN SHEL IBM SNDK AXP) + C research+valuation + SHOP valuation+frameworks + WFC frameworks top-up,20,847492,no
