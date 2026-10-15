@@ -1,2 +1,5 @@
 research/SPY
 valuation/SPY
+research/CCZ
+valuation/CCZ
+frameworks/CCZ
