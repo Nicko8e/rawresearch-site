@@ -3,3 +3,6 @@ valuation/SPY
 research/CCZ
 valuation/CCZ
 frameworks/CCZ
+research/IBIT
+valuation/IBIT
+frameworks/IBIT
