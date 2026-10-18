@@ -13,3 +13,4 @@ finished_utc,companies,answers,helper_tokens,stopped_by_usage_limit
 2026-10-15T06:20Z,5 (WFC HSBC SAP MRVL BIDU) + TMO frameworks + SHOP research; CCZ skipped - stopped by usage limit ~02:30 and resumed after 05:50 reset; tokens counted after the resume only,17,730201,yes
 2026-10-15T06:20Z,6 (AMGN SHEL IBM SNDK AXP) + C research+valuation + SHOP valuation+frameworks + WFC frameworks top-up,20,847492,no
 2026-10-18T09:20Z,6 (ADI TCOM CRM TD DIS QCOM) + C frameworks + AZN research - stopped by weekly limit 10-15 ~06:25 and resumed after 10-18 09:00 reset; tokens counted after the resume only,20,960085,yes
+2026-10-18T14:25Z,7 (GILD TTE VZ ABT SAN DE) + AZN valuation+frameworks - stopped by session limit ~10:00 and resumed after 14:00 reset,20,921695,yes
