@@ -6,3 +6,6 @@ frameworks/CCZ
 research/IBIT
 valuation/IBIT
 frameworks/IBIT
+research/GLD
+valuation/GLD
+frameworks/GLD
