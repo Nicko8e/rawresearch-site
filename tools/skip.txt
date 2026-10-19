@@ -12,3 +12,6 @@ frameworks/GLD
 research/GLD
 valuation/GLD
 frameworks/GLD
+research/IAU
+valuation/IAU
+frameworks/IAU
