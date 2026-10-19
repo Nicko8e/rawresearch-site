@@ -9,3 +9,6 @@ frameworks/IBIT
 research/GLD
 valuation/GLD
 frameworks/GLD
+research/GLD
+valuation/GLD
+frameworks/GLD
