@@ -120,8 +120,8 @@ async function livePrice(t){          // website: /api/price (Yahoo Finance, Sto
       state.price=j.price; state.priceCur=j.currency||null;
       const when=j.time? new Date(j.time) : null;
       state.priceNote=`Latest price from ${j.source||"the market"}${when&&!isNaN(when)? " · "+when.toLocaleString(undefined,{day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}) : ""} · may be delayed up to 20 min`;
-    } else state.priceNote=`No live price found for ${t}. Enter today's price under Assumptions.`;
-  }catch(e){ state.priceNote="Live price unavailable right now. Enter today's price under Assumptions."; }
+    } else state.priceNote=`No live price found for ${t}. Enter the current share price under Assumptions.`;
+  }catch(e){ state.priceNote="Live price unavailable right now. Enter the current share price under Assumptions."; }
 }
 """)
 
@@ -133,7 +133,7 @@ async function loadInvestors(force){   // website: the 13F tables straight from 
   try{
     const [a,b]=await Promise.all([dataText("sheet/investors.csv","the investor list"), dataText("sheet/investor_holdings.csv","the investor holdings")]);
     const rows=a? csvRows(parseCSVText(a)) : [], hold=b? csvRows(parseCSVText(b)) : [];
-    if(!rows.length) throw new Error("Famous investors' portfolios aren't available right now. Try again later.");
+    if(!rows.length) throw new Error("13F portfolios aren't available right now. Try again later.");
     INV.rows=rows; INV.hold=hold; INV.fetchedAt=new Date().toISOString();
     $("invStatus").hidden=true; renderInvestors();
   }catch(e){ $("invStatus").className="status err"; $("invStatus").textContent=e.message||String(e); }
@@ -170,7 +170,7 @@ if n != 2: sys.exit(f"build-web: expected 2 generic request-failed messages, fou
 # ---------- 2f. point visitors to the free Claude edition for deeper research ----------
 CLAUDE_EDITION = "https://claude.ai/artifact/UqgUFZYemAQZzJwwk7hRtW"
 replace_once('<p class="note" style="margin:0" id="resMeta"></p>',
-             '<p class="note" style="margin:0" id="resMeta"></p>\n        <p class="note" style="margin:4px 0 0">Want deeper research? <a href="%s" target="_blank" rel="noopener">Open RawResearch in Claude</a>. It runs on Claude\'s most capable models and is free with your own Claude account.</p>' % CLAUDE_EDITION)
+             '<p class="note" style="margin:0" id="resMeta"></p>\n        <p class="note" style="margin:4px 0 0">Want deeper research? <a href="%s" target="_blank" rel="noopener">Open Company Research in Claude</a>. It runs on Claude\'s most capable models and is free with your own Claude account.</p>' % CLAUDE_EDITION)
 
 # ---------- 2g. let the research routine build the exact prompts the page sends (tools/research-queue.mjs) ----------
 replace_once("\n})();\n</script>\n\n</body>", "\nwindow.RR_PROMPTS={researchPrompt, samplePrompt, fwPrompt};   // used by tools/research-queue.mjs\n})();\n</script>\n\n</body>")

@@ -1,7 +1,7 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <!-- APP NAME: to rename the app, change the two names on the next two lines. Built from the public edition by build/build-web.py; edit the source, not this file. -->
-<title>RawResearch</title>
-<script>const APP_NAME="RawResearch"; document.addEventListener("DOMContentLoaded",()=>{ document.title=APP_NAME; document.querySelectorAll("[data-app-name]").forEach(e=>e.textContent=APP_NAME); });</script>
+<title>Company Research</title>
+<script>const APP_NAME="Company Research"; document.addEventListener("DOMContentLoaded",()=>{ document.title=APP_NAME; document.querySelectorAll("[data-app-name]").forEach(e=>e.textContent=APP_NAME); });</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
@@ -183,12 +183,16 @@ dl.gloss dd{margin:0 0 8px;color:var(--muted)}
 .customrow button{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:10px 16px;cursor:pointer;font-size:.95rem}
 .customrow button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
 
-/* Assumptions */
+/* Assumptions, inside the valuation panel */
+.asmbox{display:grid;gap:12px;border-top:1px solid var(--line);padding-top:16px;margin-top:4px}
+.asmbox > header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.applyrow{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.applyrow .sp{flex:1}
 .asm{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
 .asm label{display:grid;gap:4px;font-size:.92rem;color:var(--ink)}
 .asm .in{display:flex;align-items:center;border:1px solid var(--line);border-radius:8px;background:var(--bg);height:48px;padding:0 10px}
 .asm input{border:0;background:transparent;width:100%;font-family:var(--f-mono);font-size:.95rem;outline:none;min-width:0}
-.asm .u{font-family:var(--f-mono);color:var(--muted);font-size:.85rem}
+.asm .u{font-family:var(--f-mono);color:var(--muted);font-size:.85rem;white-space:nowrap}
 .asm .in:focus-within{border-color:var(--accent)}
 
 /* Tables */
@@ -396,9 +400,9 @@ ul.litmus li{display:grid;gap:2px;padding-left:10px;border-left:3px solid var(--
 <div class="wrap">
   <header class="top">
     <div>
-      <div class="eyebrow"><span data-app-name>RawResearch</span> <span class="beta">Beta</span></div>
-      <h1>Research listed companies</h1>
-      <p class="lead">Type a company name or stock code.</p>
+      <div class="eyebrow"><span data-app-name>Company Research</span> <span class="beta">Beta</span></div>
+      <h1>Equity research and valuation</h1>
+      <p class="lead">Enter a company name or ticker.</p>
       <p class="betanote"><b>Beta, for general information and education only.</b> This tool does not provide financial advice and is not a recommendation or offer to buy, sell or hold any security. It does not consider anyone's investment objectives, financial situation or particular needs. Results depend entirely on the assumptions entered and may contain errors. This page has not been reviewed by the Monetary Authority of Singapore.</p>
     </div>
   </header>
@@ -406,29 +410,29 @@ ul.litmus li{display:grid;gap:2px;padding-left:10px;border-left:3px solid var(--
   <div class="modes" role="tablist" aria-label="What would you like to see?">
     <button type="button" role="tab" id="modeRes" aria-selected="true">Research</button>
     <button type="button" role="tab" id="modeValue" aria-selected="false">Valuation</button>
-    <button type="button" role="tab" id="modeFin" aria-selected="false">Financial history</button>
-    <button type="button" role="tab" id="modeInv" aria-selected="false">Famous investors</button>
+    <button type="button" role="tab" id="modeFin" aria-selected="false">Financial statements</button>
+    <button type="button" role="tab" id="modeInv" aria-selected="false">13F portfolios</button>
   </div>
   <p class="tabhelp" id="tabHelp" aria-live="polite"></p>
 
   <form class="bar" id="bar" autocomplete="off">
     <div class="step">
-      <label for="ticker"><span class="n">1</span>Which company?</label>
-      <div class="sugwrap"><input class="field" id="ticker" name="ticker" placeholder="Company name or stock code" maxlength="60" required spellcheck="false" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="sug" aria-expanded="false"><ul id="sug" class="sug" role="listbox" hidden></ul></div>
-      <span class="hint">For example "Apple", "DBS Bank" or "NVDA". Pick from the list, or type any listed company.</span>
+      <label for="ticker"><span class="n">1</span>Company or ticker</label>
+      <div class="sugwrap"><input class="field" id="ticker" name="ticker" placeholder="Company name or ticker" maxlength="60" required spellcheck="false" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="sug" aria-expanded="false"><ul id="sug" class="sug" role="listbox" hidden></ul></div>
+      <span class="hint">For example "Apple", "DBS Bank" or "NVDA". Pick from the list, or enter any listed ticker.</span>
     </div>
     <div class="step" id="stepFw" hidden>
-      <label for="fwSel"><span class="n">2</span>Which investor's framework?</label>
+      <label for="fwSel"><span class="n">2</span>Investment framework</label>
       <select class="field" id="fwSel" name="fw"></select>
       <span class="hint">The checklist is scored against this investor's published criteria.</span>
     </div>
     <div class="step" id="stepMethod">
-      <label for="method"><span class="n">2</span>Which calculation?</label>
+      <label for="method"><span class="n">2</span>Valuation method</label>
       <select class="field" id="method" name="method">
-        <option value="dcf" selected>Discounted Cash Flow (20-year revenue model)</option>
-        <option disabled>Comparative P/E (coming later)</option>
+        <option value="dcf" selected>Discounted cash flow (20-year earnings model)</option>
+        <option disabled>Relative valuation, P/E multiples (coming later)</option>
       </select>
-      <span class="hint">Based on how much the company is expected to sell in the next 20 years.</span>
+      <span class="hint">Projects revenue and net income over a 20-year horizon.</span>
     </div>
     <div class="step">
       <span class="hint" aria-hidden="true">&nbsp;</span>
@@ -452,102 +456,102 @@ ul.litmus li{display:grid;gap:2px;padding-left:10px;border-left:3px solid var(--
         </div>
         <div class="answer">
           <div class="card">
-            <span class="label">Price today</span>
+            <span class="label">Current share price</span>
             <b class="num mid" id="pxOut">—</b>
             <span class="note" id="pxNote"></span>
             <form id="sheetSetup" class="sheetsetup" hidden>
-              <label for="sheetUrl" class="note">To see today's price from Google Finance, paste the link to a blank Google Sheet you own.</label>
+              <label for="sheetUrl" class="note">To see the current share price from Google Finance, paste the link to a blank Google Sheet you own.</label>
               <div class="row"><input id="sheetUrl" class="field" placeholder="https://docs.google.com/spreadsheets/d/…" spellcheck="false"><button class="go" type="submit">Connect</button></div>
               <span class="note" id="sheetMsg"></span>
             </form>
           </div>
           <div class="card main">
-            <span class="label">Scenario result</span>
+            <span class="label">Implied value per share</span>
             <div><span class="big num" id="ivOut">—</span><span class="cur" id="ivCur"></span></div>
-            <span class="note">for one share</span>
+            <span class="note">DCF, on the assumptions below</span>
           </div>
         </div>
-        <p class="pending" hidden>You changed an assumption. Press <b>Calculate</b> to update the result.</p>
         <div class="verdictline"><span id="verdict" class="badge"></span><span id="verdictText"></span></div>
         <div id="meter" class="meter"></div>
         <p class="gentle" style="display:none"><span id="updown"></span></p>
         <div id="caveat" class="warnbox" hidden></div>
-      </section>
-
-      <section class="panel sec fade">
-        <header><h3>Choose a growth scenario</h3></header>
-        <p class="muted" style="margin:0">Published forecasts for the company's sales growth differ. Each option uses a different point in that range: 1 the lowest, 3 the middle, 5 the highest. The result updates as soon as you pick one.</p>
-        <div class="scale" id="scale" role="group" aria-label="Growth scenario"></div>
-        <p class="scnote" id="scNote"></p>
-        <p class="pending" hidden>Press <b>Calculate</b> to use your changes.</p>
-        <div class="customrow">
-          <button type="button" id="customBtn" aria-pressed="false">Use my own growth figure</button>
+        <div class="asmbox" id="asmSec">
+          <header><h3>Assumptions</h3><button type="button" class="linkbtn" id="resetBtn">Reset to defaults</button></header>
+          <div class="asm" id="asm">
+            <label id="lblCustom">Revenue growth (CAGR), years 1–5<span class="in"><input id="aCustom" inputmode="decimal"><span class="u">% p.a.</span></span></label>
+            <label>Revenue growth (CAGR), years 6–10<span class="in"><input id="aStage2" inputmode="decimal"><span class="u">% p.a.</span></span></label>
+            <label>Revenue growth (CAGR), years 11–20<span class="in"><input id="aStage3" inputmode="decimal"><span class="u">% p.a.</span></span></label>
+            <label>Net profit margin<span class="in"><input id="aMargin" inputmode="decimal"><span class="u">%</span></span></label>
+            <label>Current share price<span class="in"><input id="aPrice" inputmode="decimal"><span class="u" id="aPriceCur"></span></span></label>
+            <label>Discount rate<span class="in"><input id="aDisc" inputmode="decimal"><span class="u">% p.a.</span></span></label>
+            <label>Share dilution<span class="in"><input id="aDil" inputmode="decimal"><span class="u">% p.a.</span></span></label>
+            <label>Dilution period<span class="in"><input id="aDilYrs" inputmode="decimal"><span class="u">years</span></span></label>
+          </div>
+          <div class="applyrow">
+            <p class="pending" hidden>Assumptions changed. Press <b>Apply</b> to update the valuation.</p>
+            <span class="sp"></span>
+            <button type="button" class="go small" id="asmApply">Apply</button>
+          </div>
+          <p class="note" style="margin:0">Leave a field blank to use the default, shown in grey. Net profit margin is net income as a percentage of revenue. The discount rate converts future net income to present value.</p>
+          <p class="note" style="margin:0" id="asmNote"></p>
         </div>
       </section>
 
       <section class="panel sec fade">
-        <header><h3>How we worked it out</h3></header>
+        <header><h3>Revenue growth scenario</h3></header>
+        <p class="muted" style="margin:0">Analyst revenue growth estimates vary. Each scenario takes a different point in that range: 1 the low end, 3 the median, 5 the high end. The valuation updates as soon as you pick one.</p>
+        <div class="scale" id="scale" role="group" aria-label="Growth scenario"></div>
+        <p class="scnote" id="scNote"></p>
+        <p class="pending" hidden>Press <b>Apply</b> under Assumptions to use your changes.</p>
+        <div class="customrow">
+          <button type="button" id="customBtn" aria-pressed="false">Enter a custom growth rate</button>
+        </div>
+      </section>
+
+      <section class="panel sec fade">
+        <header><h3>Valuation summary</h3></header>
         <ol class="story" id="story"></ol>
       </section>
 
       <div class="moreHead">
-        <h2>Details and settings</h2>
-        <p class="muted" style="margin:0">Optional. Open any section to see the numbers behind the estimate or change an assumption.</p>
+        <h2>Supporting detail</h2>
+        <p class="muted" style="margin:0">Open any section for the inputs and workings behind the valuation.</p>
       </div>
 
-      <details class="panel fold">
-        <summary>Assumptions (adjustable)</summary>
-        <div class="sec">
-          <div style="display:flex;justify-content:flex-end"><button type="button" class="linkbtn" id="resetBtn">Reset to original assumptions</button></div>
-          <div class="asm" id="asm">
-            <label id="lblCustom">Sales growth, years 1–5<span class="in"><input id="aCustom" inputmode="decimal"><span class="u">% a year</span></span></label>
-            <label>Sales growth, years 6–10<span class="in"><input id="aStage2" inputmode="decimal"><span class="u">% a year</span></span></label>
-            <label>Sales growth, years 11–20<span class="in"><input id="aStage3" inputmode="decimal"><span class="u">% a year</span></span></label>
-            <label>Profit kept from sales<span class="in"><input id="aMargin" inputmode="decimal"><span class="u">%</span></span></label>
-            <label>Today's share price<span class="in"><input id="aPrice" inputmode="decimal"><span class="u" id="aPriceCur"></span></span></label>
-            <label>Discount for waiting<span class="in"><input id="aDisc" inputmode="decimal"><span class="u">% a year</span></span></label>
-            <label>New shares issued<span class="in"><input id="aDil" inputmode="decimal"><span class="u">% a year</span></span></label>
-            <label>New shares counted over<span class="in"><input id="aDilYrs" inputmode="decimal"><span class="u">years</span></span></label>
-          </div>
-          <p class="note" style="margin:0">Leave a box empty to use the default assumption, shown in grey. "Profit kept from sales" is how many dollars of profit the company keeps from every $100 it sells. "Discount for waiting" makes money received far in the future count for less.</p>
-          <p class="pending" hidden>Press <b>Calculate</b> to use your changes.</p>
-          <p class="note" style="margin:0" id="asmNote"></p>
-        </div>
-      </details>
 
       <details class="panel fold">
-        <summary>Published growth forecasts</summary>
+        <summary>Analyst revenue growth estimates</summary>
         <div class="sec">
-          <p class="note" style="margin:0">Each row is one forecast of how fast the company's sales will grow each year. The highlighted row is the company's own growth over the last five years. <span id="projNote"></span></p>
+          <p class="note" style="margin:0">Each row is one source's forecast revenue CAGR. The highlighted row is the company's historical revenue CAGR. <span id="projNote"></span></p>
           <div class="tscroll"><table id="projTable"></table></div>
         </div>
       </details>
 
       <details class="panel fold chart">
-        <summary>Sales over the next 20 years</summary>
+        <summary>Projected revenue, 20 years</summary>
         <div class="sec">
-          <p class="note" style="margin:0"><span id="revUnit"></span>. Point at a bar to see that year.</p>
+          <p class="note" style="margin:0"><span id="revUnit"></span>. Hover over a bar for that year's figure.</p>
           <div id="chart"></div>
-          <div class="legend"><span><i style="background:var(--s1)"></i>Years 1–5: published forecasts</span><span><i style="background:var(--s2)"></i>Years 6–10: slowing down</span><span><i style="background:var(--s3)"></i>Years 11–20: fully grown</span></div>
+          <div class="legend"><span><i style="background:var(--s1)"></i>Years 1–5: analyst estimates</span><span><i style="background:var(--s2)"></i>Years 6–10: growth deceleration</span><span><i style="background:var(--s3)"></i>Years 11–20: mature growth</span></div>
         </div>
       </details>
 
       <details class="panel fold" id="histSec">
-        <summary>Sales in past years</summary>
+        <summary>Historical revenue</summary>
         <div class="sec">
           <div><span class="note" id="histSub"></span><div class="secbadge" id="secBadge"></div></div>
           <div style="display:flex;justify-content:flex-end"><div class="seg" role="group" aria-label="Chart scale">
-            <button type="button" id="scLog" aria-pressed="true">Growth view</button><button type="button" id="scLin" aria-pressed="false">Normal view</button>
+            <button type="button" id="scLog" aria-pressed="true">Log scale</button><button type="button" id="scLin" aria-pressed="false">Linear scale</button>
           </div></div>
           <div id="histStatus" class="note"></div>
           <div id="histBody" hidden>
-            <p class="note" style="margin:0">Average yearly sales growth over different periods:</p>
+            <p class="note" style="margin:0">Revenue CAGR over different periods:</p>
             <div class="tiles" id="histTiles"></div>
             <div class="hchart" id="revHist"></div>
-            <div class="legend"><span><i style="background:var(--s1)"></i>Sales each year</span><span><i class="dash"></i><span id="trendLbl">Average growth line</span></span></div>
+            <div class="legend"><span><i style="background:var(--s1)"></i>Annual revenue</span><span><i class="dash"></i><span id="trendLbl">Average growth line</span></span></div>
             <div class="sec" style="gap:8px;margin-top:6px">
               <header>
-                <h3 style="font-size:1.05rem">Average yearly growth over time</h3>
+                <h3 style="font-size:1.05rem">Rolling revenue CAGR</h3>
                 <div class="seg" role="group" aria-label="Period">
                   <button type="button" data-win="3" aria-pressed="false">3 years</button><button type="button" data-win="5" aria-pressed="true">5 years</button><button type="button" data-win="10" aria-pressed="false">10 years</button>
                 </div>
@@ -561,17 +565,17 @@ ul.litmus li{display:grid;gap:2px;padding-left:10px;border-left:3px solid var(--
       </details>
 
       <details class="panel fold">
-        <summary>The full calculation</summary>
+        <summary>DCF calculation</summary>
         <div class="sec">
           <div class="note" id="bridgeUnit"></div>
           <div class="bridge" id="bridge"></div>
-          <header style="margin-top:10px"><h3>Year by year</h3><button type="button" class="linkbtn" id="toggleYears">Show all 20 years</button></header>
+          <header style="margin-top:10px"><h3>Annual projections</h3><button type="button" class="linkbtn" id="toggleYears">Show all 20 years</button></header>
           <div class="tscroll"><table id="yearTable"></table></div>
         </div>
       </details>
 
       <details class="panel fold">
-        <summary>Where the numbers come from</summary>
+        <summary>Data sources</summary>
         <div class="sec">
           <div class="note" id="dataAsOf"></div>
           <div class="tscroll"><table id="dataTable"></table></div>
@@ -580,15 +584,16 @@ ul.litmus li{display:grid;gap:2px;padding-left:10px;border-left:3px solid var(--
       </details>
 
       <details class="panel fold">
-        <summary>Words explained</summary>
+        <summary>Glossary</summary>
         <dl class="gloss">
-          <dt>Scenario result</dt><dd>The figure per share that the calculation gives if the company performed exactly as assumed. It is a calculation, not a forecast, a price target or a recommendation.</dd>
-          <dt>Share price</dt><dd>What one share costs on the stock market today.</dd>
-          <dt>Sales</dt><dd>All the money the company takes in from customers in a year. Also called "revenue".</dd>
-          <dt>Profit kept from sales</dt><dd>Of every $100 of sales, how much is left as profit after all costs. Also called "profit margin".</dd>
-          <dt>Average yearly growth</dt><dd>How much sales grew each year on average over a period. Also called "CAGR".</dd>
-          <dt>New shares issued</dt><dd>When a company creates new shares, often to pay staff, each existing share owns a smaller slice. Also called "dilution".</dd>
-          <dt>SEC-verified</dt><dd>The company's figures were checked against the official reports it files with the US Securities and Exchange Commission (SEC).</dd>
+          <dt>Implied value per share</dt><dd>The equity value per share this DCF produces on the stated assumptions: the present value of 20 years of projected net income, plus cash and short-term investments, less total debt, divided by diluted shares outstanding and adjusted for dilution. It is a model output, not a forecast, price target or recommendation.</dd>
+          <dt>Current share price</dt><dd>The latest traded price of one share.</dd>
+          <dt>Revenue</dt><dd>Total income from the sale of goods and services in a fiscal year (the top line).</dd>
+          <dt>Net profit margin</dt><dd>Net income as a percentage of revenue.</dd>
+          <dt>CAGR</dt><dd>Compound annual growth rate: the constant yearly rate that takes a figure from its starting value to its ending value over a period.</dd>
+          <dt>Discount rate</dt><dd>The annual rate used to convert future earnings to present value. At 0%, a dollar earned in year 20 counts the same as a dollar today.</dd>
+          <dt>Dilution</dt><dd>The reduction in existing shareholders' ownership when new shares are issued, often through stock-based compensation.</dd>
+          <dt>SEC-verified</dt><dd>Figures reconciled to the company's filings with the US Securities and Exchange Commission (10-K and 10-Q reports on EDGAR).</dd>
         </dl>
       </details>
 
@@ -599,7 +604,7 @@ ul.litmus li{display:grid;gap:2px;padding-left:10px;border-left:3px solid var(--
   <div id="inv" hidden>
     <div class="wrap" style="padding:0;max-width:none">
       <section class="panel sec fade">
-        <header><div><h3>Famous investors' portfolios</h3>
+        <header><div><h3>13F portfolios of notable investors</h3>
           <p class="note sub">Updated automatically when new filings appear.</p></div>
           <button type="button" class="linkbtn" id="invRefresh">Check for new filings</button></header>
         <div class="invctl">
@@ -632,17 +637,17 @@ ul.litmus li{display:grid;gap:2px;padding-left:10px;border-left:3px solid var(--
         <div class="co"><h2 id="resName"></h2><span class="num muted" id="resTicker"></span></div>
         <div class="about">
           <div class="mission" id="resMission" hidden><span class="ml">Mission</span><blockquote id="resMissionText"></blockquote><span class="note" id="resMissionNote"></span></div>
-          <h3>What the company does</h3>
+          <h3>Business overview</h3>
           <p class="aboutplain" id="resAbout"></p>
           <p style="margin:0" id="resAboutMore"></p>
           <div id="resMoney"></div>
         </div>
-        <h3 style="margin-top:6px">Does it have a competitive advantage?</h3>
+        <h3 style="margin-top:6px">Competitive advantage (economic moat)</h3>
         <p style="margin:0" id="resSummary"></p>
         <p class="note" style="margin:0" id="resMeta"></p>
-        <p class="note" style="margin:4px 0 0">Want deeper research? <a href="https://claude.ai/artifact/UqgUFZYemAQZzJwwk7hRtW" target="_blank" rel="noopener">Open RawResearch in Claude</a>. It runs on Claude's most capable models and is free with your own Claude account.</p>
+        <p class="note" style="margin:4px 0 0">Want deeper research? <a href="https://claude.ai/artifact/UqgUFZYemAQZzJwwk7hRtW" target="_blank" rel="noopener">Open Company Research in Claude</a>. It runs on Claude's most capable models and is free with your own Claude account.</p>
         <div class="rgrid"><div id="resScore"></div><ul class="signs" id="resSigns"></ul></div>
-        <p class="note" style="margin:0">These signs describe the company's figures and position. They are not an opinion on its shares.</p>
+        <p class="note" style="margin:0">These indicators describe the company's financials and competitive position. They are not an opinion on its shares.</p>
       </section>
 
       <section class="panel sec fade" id="ckSec">
@@ -655,7 +660,7 @@ ul.litmus li{display:grid;gap:2px;padding-left:10px;border-left:3px solid var(--
       </section>
 
       <section class="panel sec fade">
-        <header><div><h3>How it compares with every competitor</h3><p class="note sub" id="resMetricHint"></p></div></header>
+        <header><div><h3>Peer comparison</h3><p class="note sub" id="resMetricHint"></p></div></header>
         <div class="seg wrapseg" role="group" aria-label="Measure" id="resMetric"></div>
         <div class="rbars" id="resBars"></div>
         <p class="note" style="margin:0" id="resNoData"></p>
@@ -669,26 +674,26 @@ ul.litmus li{display:grid;gap:2px;padding-left:10px;border-left:3px solid var(--
       </section>
 
       <section class="panel sec fade">
-        <header><div><h3>Is it gaining or losing market share?</h3></div></header>
+        <header><div><h3>Market share trend</h3></div></header>
         <div id="resShareComp">
           <p style="margin:0" id="resShareText"></p>
           <div class="legend" id="lgResShare"></div>
           <div class="fchart" id="resShare"></div>
           <p class="note" style="margin:0" id="resShareNote"></p>
         </div>
-        <h3 style="font-size:1.05rem;margin-top:8px">Market share in its main markets <span class="note">(Claude's estimates)</span></h3>
+        <h3 style="font-size:1.05rem;margin-top:8px">Market share by key market <span class="note">(Claude's estimates)</span></h3>
         <div id="resMarkets" class="mkts"></div>
       </section>
 
       <section class="panel sec fade">
-        <header><div><h3>Where the advantage comes from</h3><p class="note sub">The eight usual sources of a lasting advantage, rated by Claude.</p></div></header>
+        <header><div><h3>Sources of competitive advantage</h3><p class="note sub">The eight standard sources of a durable moat, rated by Claude.</p></div></header>
         <div class="moats" id="resMoats"></div>
         <h3 style="font-size:1.05rem;margin-top:8px">Customers, talent and product</h3>
         <div class="moats" id="resQual"></div>
       </section>
 
       <section class="panel sec fade">
-        <header><h3>What could weaken it</h3></header>
+        <header><h3>Key risks</h3></header>
         <ul class="plain" id="resThreats"></ul>
       </section>
       <p class="note" style="margin:0" id="resSource"></p>
@@ -704,13 +709,13 @@ ul.litmus li{display:grid;gap:2px;padding-left:10px;border-left:3px solid var(--
       </section>
 
       <section class="panel sec fade" data-chart="salesProfit">
-        <header><div><h3>Sales and profit each year</h3><p class="note sub">How much the company sold, and how much of it was left as profit after all costs.</p></div></header>
+        <header><div><h3>Revenue and net income</h3><p class="note sub">Annual revenue and net income.</p></div></header>
         <div class="legend" id="lgSalesProfit"></div>
         <div class="fchart" id="chSalesProfit"></div>
       </section>
 
       <section class="panel sec fade" data-chart="margins">
-        <header><div><h3>Profit from every $100 of sales</h3><p class="note sub">Higher is better. It shows how efficiently the company turns sales into profit.</p></div></header>
+        <header><div><h3>Margins</h3><p class="note sub">Gross, operating and net margin, each as a percentage of revenue.</p></div></header>
         <div class="legend" id="lgMargins"></div>
         <div class="fchart" id="chMargins"></div>
         <p class="note" style="margin:0" id="gpNoteFin"></p>
@@ -718,35 +723,35 @@ ul.litmus li{display:grid;gap:2px;padding-left:10px;border-left:3px solid var(--
 
       <div class="grid2">
         <section class="panel sec fade" data-chart="cash">
-          <header><div><h3>Cash the business brings in</h3><p class="note sub">Cash from day-to-day business, and cash spent on buildings and equipment.</p></div></header>
+          <header><div><h3>Operating cash flow and capex</h3><p class="note sub">Net cash from operating activities, and capital expenditure on property, plant and equipment.</p></div></header>
           <div class="legend" id="lgCash"></div>
           <div class="fchart" id="chCash"></div>
         </section>
         <section class="panel sec fade" data-chart="balance">
-          <header><div><h3>What it owns and what it owes</h3><p class="note sub">Everything the company owns, compared with everything it owes, at each year end.</p></div></header>
+          <header><div><h3>Total assets and liabilities</h3><p class="note sub">Total assets compared with total liabilities at each fiscal year end.</p></div></header>
           <div class="legend" id="lgBalance"></div>
           <div class="fchart" id="chBalance"></div>
         </section>
         <section class="panel sec fade" data-chart="eps">
-          <header><div><h3>Profit for each share</h3><p class="note sub" id="subEps">Profit divided by the number of shares.</p></div></header>
+          <header><div><h3>Earnings per share (EPS)</h3><p class="note sub" id="subEps">Diluted EPS as reported.</p></div></header>
           <div class="fchart" id="chEps"></div>
         </section>
         <section class="panel sec fade" data-chart="shares">
-          <header><div><h3>Number of shares</h3><p class="note sub" id="subShares">Falling means the company buys back shares; rising means new shares are issued.</p></div></header>
+          <header><div><h3>Diluted shares outstanding</h3><p class="note sub" id="subShares">Weighted average diluted shares. A falling count indicates net buybacks; a rising count indicates dilution.</p></div></header>
           <div class="fchart" id="chShares"></div>
         </section>
       </div>
 
       <section class="panel sec fade" data-chart="returns">
-        <header><div><h3>Money returned to shareholders</h3><p class="note sub">Cash spent buying back the company's own shares, and dividends paid out.</p></div></header>
+        <header><div><h3>Shareholder returns</h3><p class="note sub">Share repurchases and dividends paid.</p></div></header>
         <div class="legend" id="lgReturns"></div>
         <div class="fchart" id="chReturns"></div>
       </section>
 
       <details class="panel fold" id="finAll">
-        <summary>Every figure the company reported</summary>
+        <summary>All reported line items</summary>
         <div class="sec">
-          <div class="finfilter"><input class="field" id="finFilter" placeholder="Search figures, e.g. inventory, debt, tax" autocomplete="off"><span class="note" id="finCount"></span></div>
+          <div class="finfilter"><input class="field" id="finFilter" placeholder="Search line items, e.g. inventory, debt, tax" autocomplete="off"><span class="note" id="finCount"></span></div>
           <p class="note" style="margin:0">Straight from the company's annual reports to the SEC, as reported (not adjusted for stock splits). Amounts in millions unless the unit says otherwise. Scroll sideways for older years.</p>
           <div class="tscroll ftable" id="finTableWrap"><table id="finTable"></table></div>
         </div>
@@ -936,29 +941,29 @@ function renderVerdict(c, price, pc, d){
   const v=$("verdict"), t=$("verdictText"), m=$("meter");
   v.hidden=true;
   if(!(isFinite(c.iv))){ t.textContent=""; m.innerHTML=""; return; }
-  if(c.iv<=0){ t.textContent="On these assumptions the calculation gives a figure below zero, because the company's debts are larger than the profits assumed."; m.innerHTML=""; return; }
-  t.textContent="This figure is the output of the assumptions below. It is not an opinion on whether the share price is too high or too low.";
+  if(c.iv<=0){ t.textContent="On these assumptions the implied equity value is negative: total debt exceeds the present value of projected net income plus cash."; m.innerHTML=""; return; }
+  t.textContent="This figure is the output of the assumptions below. It is not an opinion on whether the share is overvalued or undervalued.";
   if(!(price>0)){ m.innerHTML=""; return; }
   const ratio=price/c.iv;
   // simple scale: 0 .. max, labels in HTML so they stay readable on phones
   const W=640,H=36,L=12,R=12, top=Math.max(price,c.iv)*1.15, x=v=>L+(W-L-R)*Math.min(v/top,1);
   const xp=x(price), xv=x(c.iv), y=18;
-  m.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Today's price ${pxr(price)} and the scenario result ${pxr(c.iv)}">
+  m.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Current share price ${pxr(price)} and implied value per share ${pxr(c.iv)}">
     <rect x="${L}" y="${y-6}" width="${W-L-R}" height="12" rx="6" fill="var(--sunk)"/>
     <rect x="${Math.min(xp,xv)}" y="${y-6}" width="${Math.abs(xv-xp)}" height="12" rx="6" fill="var(--muted)" opacity=".35"/>
     <circle cx="${xp}" cy="${y}" r="11" fill="var(--ink)" stroke="var(--surface)" stroke-width="3"/>
     <circle cx="${xv}" cy="${y}" r="11" fill="var(--accent)" stroke="var(--surface)" stroke-width="3"/>
-  </svg><div class="mlegend"><span><i style="background:var(--ink)"></i>Price today: <b>${pxr(price)} ${esc(pc)}</b></span><span><i style="background:var(--accent)"></i>Scenario result: <b>${pxr(c.iv)} ${esc(pc)}</b></span></div>`;
+  </svg><div class="mlegend"><span><i style="background:var(--ink)"></i>Current share price: <b>${pxr(price)} ${esc(pc)}</b></span><span><i style="background:var(--accent)"></i>Implied value per share: <b>${pxr(c.iv)} ${esc(pc)}</b></span></div>`;
 }
 function renderStory(c, d, rc, pc){
   const name=d.name||d.ticker, ol=$("story"); ol.innerHTML="";
-  const lvl= state.custom? "your own figure" : `the ${LEVELS[state.level-1].l.toLowerCase()} view of published forecasts`;
+  const lvl= state.custom? "custom rate" : `${LEVELS[state.level-1].l.toLowerCase()} scenario of analyst estimates`;
   const items=[
-    `In its last full year, ${esc(name)} made <b>${words(c.hs.rev0, rc)}</b> in sales.`,
-    `We assume sales grow about <b>${pct(avg5(c),0)} a year</b> for the next 5 years (${lvl}), then <b>${pct(c.s2,0)} a year</b> for 5 more years, then <b>${pct(c.s3,0)} a year</b> once the company is fully grown.`,
-    `Over 20 years that adds up to <b>${words(c.sumRev, rc)}</b> of sales. If the company keeps <b>${pct(c.m,0)}</b> of its sales as profit, that's <b>${words(c.rows.reduce((a,r)=>a+r.profit,0), rc)}</b> of profit${c.r>0? `, equal to <b>${words(c.sumProfit, rc)}</b> in today's money after the discount for waiting`:""}.`,
-    `We add the cash it has (<b>${words(c.cash, rc)}</b>) and take away its debts (<b>${words(c.debt, rc)}</b>).`,
-    `Then we share the total among all <b>${(c.shares/1000>=1? (c.shares/1000).toLocaleString(undefined,{maximumFractionDigits:1})+" billion" : c.shares.toLocaleString(undefined,{maximumFractionDigits:c.shares<100?1:0})+" million")}</b> shares${d.sharesAsOf? " (as of the "+esc(d.sharesAsOf)+")" : ""}${c.dil>0? `, allowing for new shares the company tends to issue (${pct(c.dil,1)} a year)`:""}. That gives a scenario result of about <b>${pxr(c.iv)} ${pc}</b> per share.`
+    `Latest fiscal-year revenue: <b>${words(c.hs.rev0, rc)}</b> (${esc(name)}).`,
+    `Revenue CAGR of <b>${pct(avg5(c),0)}</b> for years 1–5 (${lvl}), <b>${pct(c.s2,0)}</b> for years 6–10 and <b>${pct(c.s3,0)}</b> for years 11–20 (mature growth).`,
+    `Cumulative 20-year revenue of <b>${words(c.sumRev, rc)}</b>. At a <b>${pct(c.m,0)}</b> net profit margin, cumulative net income is <b>${words(c.rows.reduce((a,r)=>a+r.profit,0), rc)}</b>${c.r>0? `, with a present value of <b>${words(c.sumProfit, rc)}</b> at a ${pct(c.r,1)} discount rate`:" (undiscounted)"}.`,
+    `Plus cash and short-term investments (<b>${words(c.cash, rc)}</b>), less total debt (<b>${words(c.debt, rc)}</b>), gives the implied equity value.`,
+    `Divided by <b>${(c.shares/1000>=1? (c.shares/1000).toLocaleString(undefined,{maximumFractionDigits:1})+" billion" : c.shares.toLocaleString(undefined,{maximumFractionDigits:c.shares<100?1:0})+" million")}</b> diluted shares${d.sharesAsOf? " (as of "+esc(d.sharesAsOf)+")" : ""}${c.dil>0? `, adjusted for ${pct(c.dil,1)} annual dilution`:""}: an implied value of <b>${pxr(c.iv)} ${pc}</b> per share.`
   ];
   for(const h of items){ const li=document.createElement("li"); li.innerHTML=h; ol.append(li); }
 }
@@ -971,7 +976,7 @@ function render(){ syncNotes();
   $("coTicker").textContent=[d.ticker,d.exchange].filter(Boolean).join(" · ");
   const sp=$("srcPill");
   if(state.source==="web"){ sp.className="pill web"; sp.textContent=(secInfo()?"✓ Checked against official filings":"Researched")+(state.asOf?" · "+state.asOf:""); }
-  else if(d.secOverlay){ sp.className="pill web"; sp.textContent="✓ Sales, shares, cash and debt from SEC filings"+(d.dataAsOf?" · "+d.dataAsOf:""); }
+  else if(d.secOverlay){ sp.className="pill web"; sp.textContent="✓ Revenue, shares, cash and debt from SEC filings"+(d.dataAsOf?" · "+d.dataAsOf:""); }
   else { sp.className="pill src"; sp.textContent="Figures not yet checked"+(d.dataAsOf?" · as of "+d.dataAsOf:""); }
 
   $("ivOut").textContent = isFinite(c.iv)? pxr(c.iv) : "—";
@@ -980,7 +985,7 @@ function render(){ syncNotes();
   $("aPriceCur").textContent=pc; $("aPrice").placeholder = state.price!=null? String(state.price) : d.price!=null? String(d.price) : "";
   $("sheetSetup").hidden = !state.priceNeedsSheet;
   $("pxOut").textContent = price!=null? pxr(price)+" "+(state.ov.price==null && state.price!=null && state.priceCur? state.priceCur : pc) : "—";
-  $("pxNote").textContent = state.ov.price!=null? "Your price" : state.price!=null? state.priceNote : (state.priceNote || (d.price!=null? "Reference price"+(d.priceDate?" from "+d.priceDate:"")+", not live. Type today's price under Assumptions (adjustable)." : "Type today's price under Assumptions (adjustable)."));
+  $("pxNote").textContent = state.ov.price!=null? "Your price" : state.price!=null? state.priceNote : (state.priceNote || (d.price!=null? "Reference price"+(d.priceDate?" from "+d.priceDate:"")+", not live. Enter the current share price under Assumptions." : "Enter the current share price under Assumptions."));
   const ud=$("updown");
   if(price>0 && isFinite(c.iv)){
     const u=c.iv/price-1;
@@ -991,9 +996,9 @@ function render(){ syncNotes();
   renderVerdict(c, price, pc, d);
   renderStory(c, d, rc, pc);
   const cav=[];
-  if(state.source!=="web") cav.push(d.secOverlay? "Sales, shares, cash and debt come from the company's latest SEC filings. Growth forecasts come from Claude's general knowledge and may be out of date." : "Please note: this company's figures come from Claude's general knowledge and may be out of date. Check them before relying on the result.");
-  if(state.price!=null && d.price>0 && !d.secOverlay){ const r=state.price/d.price; if(r>=1.8||r<=0.56) cav.push(`Today's price is very different from the price when these figures were gathered (${pxr(d.price)}). The company may have split its shares since then, which would make the share count, and so the scenario result, wrong.`); }
-  if(c.r===0) cav.push("Note: this method counts a dollar earned in 20 years the same as a dollar today, which raises the result. To count future money for less, set Discount for waiting in Assumptions (adjustable) (for example 8–10% a year).");
+  if(state.source!=="web") cav.push(d.secOverlay? "Revenue, diluted shares, cash and debt come from the company's latest SEC filings. Growth estimates come from Claude's general knowledge and may be out of date." : "Please note: this company's figures come from Claude's general knowledge and may be out of date. Check them before relying on the result.");
+  if(state.price!=null && d.price>0 && !d.secOverlay){ const r=state.price/d.price; if(r>=1.8||r<=0.56) cav.push(`The current share price differs sharply from the reference price when these figures were gathered (${pxr(d.price)}). A stock split since then would make the share count, and so the implied value per share, wrong.`); }
+  if(c.r===0) cav.push("Note: the discount rate is 0%, so net income earned in year 20 counts the same as today, which raises the implied value. To discount future earnings, set a discount rate under Assumptions (for example 8–10% a year).");
   $("caveat").hidden=!cav.length; $("caveat").textContent=cav.join(" ");
 
   // scale
@@ -1003,25 +1008,25 @@ function render(){ syncNotes();
     const b=document.createElement("button"); b.type="button";
     b.setAttribute("aria-pressed", String(!state.custom && state.level===L.k));
     b.innerHTML=`<span class="k">${L.k}</span><span class="l"></span><span class="g"></span>`;
-    b.querySelector(".l").textContent=L.l; b.querySelector(".g").textContent=pct(r.G5,0)+" a year";
+    b.querySelector(".l").textContent=L.l; b.querySelector(".g").textContent=pct(r.G5,0)+" p.a.";
     b.title=`${L.l}: 1-yr ${pct(r.G1)}, 3-yr ${pct(r.G3)}, 5-yr ${pct(r.G5)} per year`;
     b.onclick=()=>{ $("aCustom").value=""; if(state.ov) state.ov.custom=null; state.level=L.k; state.draftLevel=null; render(); flashResult(); };   // scenarios apply straight away
     sc.append(b);
   }
   $("customBtn").setAttribute("aria-pressed",String(state.custom));
-  $("scNote").textContent = state.custom? `You chose ${pct(c.y1,0)} sales growth a year for the next 5 years.` : `${LEVELS[state.level-1].l}: uses ${LEVELS[state.level-1].s}, about ${pct(avg5(c),0)} sales growth a year for the next 5 years.`;
+  $("scNote").textContent = state.custom? `Custom: ${pct(c.y1,0)} revenue CAGR for years 1–5.` : `${LEVELS[state.level-1].l}: uses ${LEVELS[state.level-1].s}, a revenue CAGR of about ${pct(avg5(c),0)} for years 1–5.`;
 
   // assumptions placeholders show the automatic value
   const setPh=(id,v,dec=1)=>{ $(id).placeholder = (v==null||!isFinite(v))? "" : (v*100).toFixed(dec); };
   setPh("aCustom", c.G5); setPh("aStage2",c.s2auto); setPh("aStage3",c.s3auto);
   setPh("aMargin",c.mAuto); $("aDisc").placeholder="0"; setPh("aDil",c.dilAuto,2); $("aDilYrs").placeholder="10";
-  $("asmNote").textContent = `Blank fields use the automatic value shown. Years 1–5 default to the selected scenario (${state.custom? "now overridden by your rate" : pct(c.G5)+" a year on average, stepping from "+pct(c.y1)+" in year 1 to "+pct(c.y45)+" in year 5"}); type a rate to apply it flat to all five years. Years 6–10 default to half the 5-year forecast rate. Years 11–20 default to 4–10% based on how fast the company is still growing. Margin: ${d.marginRationale||"a steady-state net margin for a revenue-optimized business."} Dilution: ${c.hs.dil!=null? "past "+c.hs.shYears+"-year average "+pct(c.hs.dil,2)+" per year"+(c.hs.dil<0?" (net buybacks, not credited because they are paid from the same profits)":"") : "no share history, so 0% is used"}. It is applied over ${c.dilYrs} years, the midpoint of the 20-year horizon.`;
+  $("asmNote").textContent = `Blank fields use the default shown. Years 1–5 default to the selected scenario (${state.custom? "now overridden by your rate" : pct(c.G5)+" a year on average, stepping from "+pct(c.y1)+" in year 1 to "+pct(c.y45)+" in year 5"}); type a rate to apply it flat to all five years. Years 6–10 default to half the 5-year forecast rate. Years 11–20 default to 4–10% based on how fast the company is still growing. Margin: ${d.marginRationale||"a steady-state net margin for a revenue-optimized business."} Dilution: ${c.hs.dil!=null? "past "+c.hs.shYears+"-year average "+pct(c.hs.dil,2)+" per year"+(c.hs.dil<0?" (net buybacks, not credited because they are paid from the same profits)":"") : "no share history, so 0% is used"}. It is applied over ${c.dilYrs} years, the midpoint of the 20-year horizon.`;
 
   // projections table
   const pt=$("projTable");
   const P=(d.projections||[]);
-  let h=`<thead><tr><th>Forecast by</th><th>Next year</th><th>Next 3 years<br>(per year)</th><th>Next 5 years<br>(per year)</th></tr></thead><tbody>`;
-  h+=`<tr class="hist"><td>The company's own growth, last ${c.hs.revYears} years</td><td class="num">${pct(c.hs.revCagr)}</td><td class="num">${pct(c.hs.revCagr)}</td><td class="num">${pct(c.hs.revCagr)}</td></tr>`;
+  let h=`<thead><tr><th>Source</th><th>FY+1 growth</th><th>3-year CAGR</th><th>5-year CAGR</th></tr></thead><tbody>`;
+  h+=`<tr class="hist"><td>Historical revenue CAGR, last ${c.hs.revYears} years</td><td class="num">${pct(c.hs.revCagr)}</td><td class="num">${pct(c.hs.revCagr)}</td><td class="num">${pct(c.hs.revCagr)}</td></tr>`;
   for(const p of P){
     const name = esc(p.source||"Forecast");
     const nm = p.url? `<a href="${escAttr(p.url)}" target="_blank" rel="noopener">${name}</a>` : name;
@@ -1030,7 +1035,7 @@ function render(){ syncNotes();
   }
   h+=`</tbody><tfoot><tr><td><b>Selected: ${state.custom?"Custom":LEVELS[state.level-1].l}</b></td><td class="num"><b>${pct(c.y1)}</b></td><td class="num"><b>${pct(state.custom?c.y1:levelRates(c.sets,state.level).G3)}</b></td><td class="num"><b>${pct(c.G5)}</b></td></tr></tfoot>`;
   pt.innerHTML=h;
-  $("projNote").textContent = `${P.length} forecast source${P.length===1?"":"s"} + past growth`;
+  $("projNote").textContent = `${P.length} estimate source${P.length===1?"":"s"} plus historical CAGR`;
 
   // chart
   drawChart(c.rows, rc);
@@ -1040,23 +1045,23 @@ function render(){ syncNotes();
   const b=$("bridge"), bu=$("bridgeUnit");
   bu.textContent = rc+(c.fx!==1? ` → ${pc} at ${c.fx}`:"");
   const lines=[
-    ["Total sales over 20 years", money(c.sumRev)],
-    [`× profit kept from sales (${pct(c.m)})`+(c.r>0?`, discounted ${pct(c.r)} a year for waiting`:"")+" = total profit", money(c.sumProfit)],
-    ["+ cash the company holds", money(c.cash)],
-    ["− money the company owes", money(-c.debt)],
-    ["= total for the whole company", money(c.equity), "tot"],
-    [`÷ number of shares (${money(c.shares)})`, px(c.perShare)+" "+rc],
-    [`allowing for new shares (${pct(c.dil,2)} a year over ${c.dilYrs} years)`, px(c.perShare/c.dilFactor)+" "+rc],
+    ["Cumulative revenue, 20 years", money(c.sumRev)],
+    [`× net profit margin (${pct(c.m)})`+(c.r>0?`, discounted at ${pct(c.r)} p.a.`:"")+(c.r>0?" = present value of net income":" = cumulative net income"), money(c.sumProfit)],
+    ["+ cash and short-term investments", money(c.cash)],
+    ["− total debt", money(-c.debt)],
+    ["= implied equity value", money(c.equity), "tot"],
+    [`÷ diluted shares outstanding (${money(c.shares)})`, px(c.perShare)+" "+rc],
+    [`adjusted for dilution (${pct(c.dil,2)} p.a. over ${c.dilYrs} years)`, px(c.perShare/c.dilFactor)+" "+rc],
   ];
   if(c.fx!==1) lines.push([`× FX to ${pc}`, px(c.iv)+" "+pc]);
-  lines.push(["Scenario result per share", px(c.iv)+" "+pc, "fin"]);
+  lines.push(["Implied value per share", px(c.iv)+" "+pc, "fin"]);
   b.innerHTML=""; for(const [k,v,cls] of lines){ const r=document.createElement("div"); if(cls) r.className=cls; const a=document.createElement("span"); a.textContent=k; const z=document.createElement("span"); z.textContent=v; r.append(a,z); b.append(r); }
 
   // years table
   const yt=$("yearTable");
   const show = state.showAll? c.rows : c.rows.filter(r=>[1,2,3,4,5,10,15,20].includes(r.t));
   let yh=`<thead><tr><th>Year</th><th>Growth</th><th>Revenue</th><th>Net profit</th>${c.r>0?"<th>Present value</th>":""}</tr></thead><tbody>`;
-  for(const r of show) yh+=`<tr><td>Year ${r.t} · ${esc(fyAt(r.t))} <span class="note">${r.stage===1?"analysts":r.stage===2?"slowing":"mature"}</span></td><td class="num">${pct(r.g)}</td><td class="num">${money(r.rev)}</td><td class="num">${money(r.profit)}</td>${c.r>0?`<td class="num">${money(r.pv)}</td>`:""}</tr>`;
+  for(const r of show) yh+=`<tr><td>Year ${r.t} · ${esc(fyAt(r.t))} <span class="note">${r.stage===1?"analyst estimates":r.stage===2?"deceleration":"mature"}</span></td><td class="num">${pct(r.g)}</td><td class="num">${money(r.rev)}</td><td class="num">${money(r.profit)}</td>${c.r>0?`<td class="num">${money(r.pv)}</td>`:""}</tr>`;
   yh+=`</tbody><tfoot><tr><td><b>Total</b></td><td></td><td class="num"><b>${money(c.sumRev)}</b></td><td class="num"><b>${money(c.rows.reduce((s,r)=>s+r.profit,0))}</b></td>${c.r>0?`<td class="num"><b>${money(c.sumProfit)}</b></td>`:""}</tr></tfoot>`;
   yt.innerHTML=yh; $("toggleYears").textContent = state.showAll? "Show key years" : "Show all 20 years";
 
@@ -1320,8 +1325,8 @@ async function livePrice(t){          // website: /api/price (Yahoo Finance, Sto
       state.price=j.price; state.priceCur=j.currency||null;
       const when=j.time? new Date(j.time) : null;
       state.priceNote=`Latest price from ${j.source||"the market"}${when&&!isNaN(when)? " · "+when.toLocaleString(undefined,{day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}) : ""} · may be delayed up to 20 min`;
-    } else state.priceNote=`No live price found for ${t}. Enter today's price under Assumptions.`;
-  }catch(e){ state.priceNote="Live price unavailable right now. Enter today's price under Assumptions."; }
+    } else state.priceNote=`No live price found for ${t}. Enter the current share price under Assumptions.`;
+  }catch(e){ state.priceNote="Live price unavailable right now. Enter the current share price under Assumptions."; }
 }
 /* ---------- full revenue history ---------- */
 const H = {rows:null, cur:null, note:"", src:"", win:5, log:true, token:0};
@@ -1485,10 +1490,12 @@ document.querySelectorAll("[data-win]").forEach(b=>b.onclick=()=>{ H.win=+b.data
 const OV_MAP={aPrice:"price",aCustom:"custom",aStage2:"stage2",aStage3:"stage3",aMargin:"margin",aDisc:"disc",aDil:"dil",aDilYrs:"dilYrs"};
 function clearInputs(){ for(const id in OV_MAP) $(id).value=""; }
 let tmr;
-for(const id in OV_MAP){ $(id).addEventListener("input",()=>{ if(state.data) markPending(); }); }
+for(const id in OV_MAP){ $(id).addEventListener("input",()=>{ if(state.data) markPending(); });
+  $(id).addEventListener("keydown",ev=>{ if(ev.key==="Enter" && state.data){ ev.preventDefault(); applyDrafts(); flashResult(); } }); }
+$("asmApply").onclick=()=>{ if(!state.data) return; applyDrafts(); flashResult(); };   // Apply: recalculate with the boxes as typed
 function flashResult(){ const c=document.querySelector("#result .card.main"); if(c){ c.classList.remove("flash"); void c.offsetWidth; c.classList.add("flash"); } }
-function markPending(){ state.dirty=true; document.querySelectorAll(".pending").forEach(e=>e.hidden=false); $("go").classList.add("attn"); }
-function clearPending(){ state.dirty=false; document.querySelectorAll(".pending").forEach(e=>e.hidden=true); $("go").classList.remove("attn"); }
+function markPending(){ state.dirty=true; document.querySelectorAll(".pending").forEach(e=>e.hidden=false); $("go").classList.add("attn"); $("asmApply").classList.add("attn"); }
+function clearPending(){ state.dirty=false; document.querySelectorAll(".pending").forEach(e=>e.hidden=true); $("go").classList.remove("attn"); $("asmApply").classList.remove("attn"); }
 function applyDrafts(){                        // read the boxes and chosen scenario, then recalculate
   state.ov={}; for(const id in OV_MAP) state.ov[OV_MAP[id]]=parseOv($(id).value);
   if(state.draftLevel) state.level=state.draftLevel;
@@ -1667,7 +1674,7 @@ function renderFin(){ syncNotes();
   const Y=FIN.years, yr=i=>Y[i]||"";
   $("finName").textContent=FIN.name; $("finTicker").textContent=FIN.ticker+" · SEC CIK "+FIN.cik;
   const firstY=Y.find((_,i)=>FIN.rows.some(r=>r.vals[i]!=null))||Y[0];
-  $("finMeta").textContent=`✓ From official SEC filings · ${firstY}–${Y[Y.length-1]} · ${FIN.rows.length} figures`;
+  $("finMeta").textContent=`✓ From official SEC filings · ${firstY}–${Y[Y.length-1]} · ${FIN.rows.length} line items`;
 
   const gU=t=>series(t,"USD"), D=deriveCore(gU, REV_TAGS);
   const rev=D.rev, ni=D.ni, op=D.op, gpr=grossProfitFrom(gU, rev, op), gp=gpr.v, ocf=D.ocf;
@@ -1675,7 +1682,7 @@ function renderFin(){ syncNotes();
   const cashOnly=series(["CashAndCashEquivalentsAtCarryingValue","CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents","Cash"],"USD");
   const inv=series(["ShortTermInvestments","MarketableSecuritiesCurrent","AvailableForSaleSecuritiesDebtSecuritiesCurrent"],"USD");
   const cash=add(cashOnly, inv);
-  const [cl]=lastTwo(cashOnly), cashTile = (cl>=0 && inv[cl]==null)? ["Cash in the bank", cashOnly] : ["Cash and investments", cash];
+  const [cl]=lastTwo(cashOnly), cashTile = (cl>=0 && inv[cl]==null)? ["Cash and equivalents", cashOnly] : ["Cash and short-term investments", cash];
   const assets=series(["Assets"],"USD"), equity=D.eq;
   let liab=series(["Liabilities"],"USD"); liab=liab.map((v,i)=>v!=null? v : (assets[i]!=null&&equity[i]!=null? assets[i]-equity[i] : null));
   // long-term debt plus the part due within a year; where only the total is reported, that total already includes the part due within a year
@@ -1688,50 +1695,50 @@ function renderFin(){ syncNotes();
 
   // headline tiles
   const [li,pi]=lastTwo(rev);
-  $("finLead").textContent = li>=0? `In ${yr(li)}, ${FIN.name.replace(/\b(CORP|INC|LTD|CO|PLC|CORPORATION|INCORPORATED)\.?$/i,"").trim()} made ${words(rev[li],"USD")} in sales${ni[li]!=null?` and ${ni[li]>=0?"a profit":"a loss"} of ${words(Math.abs(ni[li]),"USD")}`:""}.` : "";
-  const tiles=[["Sales",rev,true],["Profit",ni,true],["Cash from the business",ocf,true],[cashTile[0],cashTile[1],true],["Debt",debt,false],["Owners' equity",equity,true]];
+  $("finLead").textContent = li>=0? `In ${yr(li)}, ${FIN.name.replace(/\b(CORP|INC|LTD|CO|PLC|CORPORATION|INCORPORATED)\.?$/i,"").trim()} reported revenue of ${words(rev[li],"USD")}${ni[li]!=null?` and ${ni[li]>=0?"net income":"a net loss"} of ${words(Math.abs(ni[li]),"USD")}`:""}.` : "";
+  const tiles=[["Revenue",rev,true],["Net income",ni,true],["Operating cash flow",ocf,true],[cashTile[0],cashTile[1],true],["Total debt",debt,false],["Shareholders' equity",equity,true]];
   $("finKpis").innerHTML=tiles.map(([label,vals,upGood])=>{ const [a,b]=lastTwo(vals); if(a<0) return "";
     const v=vals[a], p=b>=0? vals[b] : null; let d="";
     if(p!=null && p!==0){ const ch=(v-p)/Math.abs(p); const up=ch>=0; d=`<b>${up?"▲ up":"▼ down"} ${fmtPct(Math.abs(ch))}</b> vs ${esc(yr(b))}`; }
     return `<div class="kpi"><span class="kl">${label}</span><span class="kv">${esc(words(v,"USD"))}</span><span class="kd">${esc(yr(a))}${d?" · ":""}${d}</span>${spark(vals,"var(--c1)")}</div>`; }).join("");
 
   const show=(key,ok)=>{ const sec=document.querySelector(`[data-chart="${key}"]`); if(sec) sec.hidden=!ok; };
-  show("salesProfit", finChart($("chSalesProfit"),"bar",[{name:"Sales",color:"var(--c1)",vals:rev},{name:"Profit",color:"var(--c2)",vals:ni}],fmtM)); legendHTML($("lgSalesProfit"),[["Sales","var(--c1)"],["Profit","var(--c2)"]]);
-  const m=[{name:gpr.method==="sec"? "Gross profit (after making the product)" : "Gross profit (worked out, see note)",color:"var(--c1)",vals:ratio(gp,rev)},{name:"Operating profit (after running the business)",color:"var(--c3)",vals:ratio(op,rev)},{name:"Net profit (after everything)",color:"var(--c2)",vals:ratio(ni,rev)}].filter(x=>x.vals.some(v=>v!=null));
+  show("salesProfit", finChart($("chSalesProfit"),"bar",[{name:"Revenue",color:"var(--c1)",vals:rev},{name:"Net income",color:"var(--c2)",vals:ni}],fmtM)); legendHTML($("lgSalesProfit"),[["Revenue","var(--c1)"],["Net income","var(--c2)"]]);
+  const m=[{name:gpr.method==="sec"? "Gross margin" : "Gross margin (calc., see note)",color:"var(--c1)",vals:ratio(gp,rev)},{name:"Operating margin",color:"var(--c3)",vals:ratio(op,rev)},{name:"Net margin",color:"var(--c2)",vals:ratio(ni,rev)}].filter(x=>x.vals.some(v=>v!=null));
   $("gpNoteFin").textContent= gpr.method!=="sec" && gp.some(v=>v!=null)? `The company reports no gross profit figure, so gross profit here is ${GP_METHOD[gpr.method]}.${gpPartsNote(FIN.years, gpr.sgaParts)}${gpFillNote(FIN.years, gpr.fills)}${gpGapNote(FIN.years, gpr.gaps)}` : (gpr.fills||[]).length? gpFillNote(FIN.years, gpr.fills).trim() : "";
   const dt=derivedText(FIN.years, D.notes);
   $("finDerived").textContent= dt? `Not reported directly, so worked out exactly from other figures the company reported (each method is used only where the company's own figures confirm it in at least two other years): ${dt}.` : "";
   show("margins", finChart($("chMargins"),"line",m.map(x=>({...x,vals:x.vals.map(v=>v==null?null:Math.max(-1.5,Math.min(1.5,v)))})),fmtPct)); legendHTML($("lgMargins"),m.map(x=>[x.name,x.color,"line"]));
-  show("cash", finChart($("chCash"),"bar",[{name:"Cash from the business",color:"var(--c1)",vals:ocf},{name:"Spent on buildings & equipment",color:"var(--c2)",vals:capex}],fmtM)); legendHTML($("lgCash"),[["Cash from the business","var(--c1)"],["Spent on buildings & equipment","var(--c2)"]]);
-  show("balance", finChart($("chBalance"),"bar",[{name:"Owns (assets)",color:"var(--c1)",vals:assets},{name:"Owes (liabilities)",color:"var(--c2)",vals:liab}],fmtM)); legendHTML($("lgBalance"),[["Owns (assets)","var(--c1)"],["Owes (liabilities)","var(--c2)"]]);
-  $("subEps").textContent="Profit divided by the number of shares."+splitNote;
-  show("eps", finChart($("chEps"),"line",[{name:"Profit per share",color:"var(--c1)",vals:eps}],v=>"$"+(Math.abs(v)>=100?Math.round(v):v.toFixed(2))));
-  $("subShares").textContent="Falling means the company buys back shares; rising means new shares are issued."+splitNote;
-  show("shares", finChart($("chShares"),"line",[{name:"Shares",color:"var(--c1)",vals:shares}],v=>money(v).replace(/(\\d)([MBT])$/,"$1$2")));
-  show("returns", finChart($("chReturns"),"bar",[{name:"Share buybacks",color:"var(--c1)",vals:buyback},{name:"Dividends",color:"var(--c3)",vals:divs}],fmtM)); legendHTML($("lgReturns"),[["Share buybacks","var(--c1)"],["Dividends","var(--c3)"]]);
+  show("cash", finChart($("chCash"),"bar",[{name:"Operating cash flow",color:"var(--c1)",vals:ocf},{name:"Capital expenditure",color:"var(--c2)",vals:capex}],fmtM)); legendHTML($("lgCash"),[["Operating cash flow","var(--c1)"],["Capital expenditure","var(--c2)"]]);
+  show("balance", finChart($("chBalance"),"bar",[{name:"Total assets",color:"var(--c1)",vals:assets},{name:"Total liabilities",color:"var(--c2)",vals:liab}],fmtM)); legendHTML($("lgBalance"),[["Total assets","var(--c1)"],["Total liabilities","var(--c2)"]]);
+  $("subEps").textContent="Diluted EPS as reported (basic where diluted isn't reported)."+splitNote;
+  show("eps", finChart($("chEps"),"line",[{name:"EPS",color:"var(--c1)",vals:eps}],v=>"$"+(Math.abs(v)>=100?Math.round(v):v.toFixed(2))));
+  $("subShares").textContent="Weighted average diluted shares. A falling count indicates net buybacks; a rising count indicates dilution."+splitNote;
+  show("shares", finChart($("chShares"),"line",[{name:"Diluted shares",color:"var(--c1)",vals:shares}],v=>money(v).replace(/(\\d)([MBT])$/,"$1$2")));
+  show("returns", finChart($("chReturns"),"bar",[{name:"Share repurchases",color:"var(--c1)",vals:buyback},{name:"Dividends",color:"var(--c3)",vals:divs}],fmtM)); legendHTML($("lgReturns"),[["Share repurchases","var(--c1)"],["Dividends","var(--c3)"]]);
 
   renderFinTable("");
   $("finSource").textContent=`Source: the company's annual reports filed with the SEC (EDGAR). Years are the company's fiscal years. Loaded ${new Date(FIN.fetchedAt||Date.now()).toLocaleString()}.`;
 }
 
-const CAT_GROUP={"Income statement":"Income statement (sales, costs and profit)","Sales by business line":"Sales by business line","Balance sheet":"Balance sheet (what it owns and owes)","Cash flow":"Cash flow","Per share":"Per share and shares","Shares":"Per share and shares","Employee share pay":"Employee share pay","Company information":"Company information","Other disclosures":"Other figures"};
+const CAT_GROUP={"Income statement":"Income statement","Sales by business line":"Revenue by segment","Balance sheet":"Balance sheet","Cash flow":"Cash flow","Per share":"Per share and shares","Shares":"Per share and shares","Employee share pay":"Stock-based compensation","Company information":"Company information","Other disclosures":"Other disclosures"};
 function groupOf(r){
   if(r.cat && CAT_GROUP[r.cat]) return CAT_GROUP[r.cat];
   const t=r.tag;
   if(/PerShare|^EarningsPerShare/.test(t) || /Shares?Outstanding|NumberOfShares/.test(t)) return "Per share and shares";
   if(/^NetCashProvidedBy|^Payments|^Proceeds|^Repayments|^IncreaseDecrease|CashPeriodIncrease|ShareBasedCompensation|^Depreciation|^Amortization|EffectOfExchangeRate/.test(t)) return "Cash flow";
-  if(/Assets|Liabilit|Equity|Receivable|Payable|Inventor|Goodwill|IntangibleAssets|PropertyPlant|^Cash|MarketableSecurities|Investments|Debt|Borrowings|Accrued|Deferred(?!.*Expense)|Prepaid|CommonStockValue|RetainedEarnings|TreasuryStock|AdditionalPaidInCapital|Lease/.test(t)) return "Balance sheet (what it owns and owes)";
-  if(/Revenue|Sales|Cost|Expense|Income|Profit|Loss|Earnings|Tax|Interest|Margin/.test(t)) return "Income statement (sales, costs and profit)";
-  return "Other figures";
+  if(/Assets|Liabilit|Equity|Receivable|Payable|Inventor|Goodwill|IntangibleAssets|PropertyPlant|^Cash|MarketableSecurities|Investments|Debt|Borrowings|Accrued|Deferred(?!.*Expense)|Prepaid|CommonStockValue|RetainedEarnings|TreasuryStock|AdditionalPaidInCapital|Lease/.test(t)) return "Balance sheet";
+  if(/Revenue|Sales|Cost|Expense|Income|Profit|Loss|Earnings|Tax|Interest|Margin/.test(t)) return "Income statement";
+  return "Other disclosures";
 }
-const GROUP_ORDER=["Income statement (sales, costs and profit)","Sales by business line","Balance sheet (what it owns and owes)","Cash flow","Per share and shares","Employee share pay","Company information","Other figures"];
+const GROUP_ORDER=["Income statement","Revenue by segment","Balance sheet","Cash flow","Per share and shares","Stock-based compensation","Company information","Other disclosures"];
 function fmtCell(r,v){ if(v==null) return ""; if(/per share/.test(r.unit)) return v.toFixed(2); if(Math.abs(v)>=1000) return Math.round(v).toLocaleString(); if(Math.abs(v)>=1) return v.toLocaleString(undefined,{maximumFractionDigits:1}); return v.toLocaleString(undefined,{maximumFractionDigits:3}); }
 function renderFinTable(q){
   const nq=norm(q);
   const rows=FIN.rows.filter(r=>!nq || norm(r.label).includes(nq) || norm(r.tag).includes(nq));
-  $("finCount").textContent = `${rows.length} of ${FIN.rows.length} figures`;
+  $("finCount").textContent = `${rows.length} of ${FIN.rows.length} line items`;
   const groups={}; for(const r of rows) (groups[groupOf(r)]=groups[groupOf(r)]||[]).push(r);
-  let h=`<thead><tr><th>Figure</th><th>Unit</th><th>Trend</th>${FIN.years.map(y=>`<th>${esc(y)}</th>`).join("")}</tr></thead><tbody>`;
+  let h=`<thead><tr><th>Line item</th><th>Unit</th><th>Trend</th>${FIN.years.map(y=>`<th>${esc(y)}</th>`).join("")}</tr></thead><tbody>`;
   for(const g of GROUP_ORDER){ const list=groups[g]; if(!list) continue;
     h+=`<tr class="grp"><td>${esc(g)} · ${list.length}</td><td colspan="${2+FIN.years.length}"></td></tr>`;
     for(const r of list) h+=`<tr><td title="${esc(r.tag)}">${esc(r.label)}</td><td class="u">${esc(r.unit)}</td><td class="sp">${spark(r.vals,"var(--c1)")}</td>${r.vals.map(v=>`<td class="num">${fmtCell(r,v)}</td>`).join("")}</tr>`; }
@@ -1752,10 +1759,10 @@ async function loadFinancials(t){
 }
 
 // one line under the tabs describing only the selected tab
-const TAB_HELP={res:"Explains in plain words what the company does, where its strengths come from, how it scores against famous investors' frameworks and how it compares with every competitor.",
-  value:"Generates the valuation of the company using your selected valuation method.",
-  fin:"Shows every figure the company has reported to the SEC.",
-  inv:"Shows what well-known investors own, from their SEC filings, ranked with concentrated portfolios first and then by performance."};
+const TAB_HELP={res:"Business overview, economic moat, investment framework scores and peer comparison.",
+  value:"Values the company with the selected valuation method. Adjust the assumptions and press Apply.",
+  fin:"Every line item the company has reported to the SEC in its annual filings.",
+  inv:"Holdings of well-known investors from their 13F filings, ranked with concentrated portfolios first and then by performance."};
 $("tabHelp").textContent=TAB_HELP[state.mode]||TAB_HELP.value;
 function setMode(mode){
   state.mode=mode;
@@ -2297,7 +2304,7 @@ function calcCheck(kind, m){
   if(kind==="roic" && m.latest.roic!=null){ const r=m.latest.roic; return {verdict:r>=0.15?"yes":r>=0.10?"partly":"no", evidence:`Return on capital ${pct(r)} in ${m.fy} (operating profit after its actual ${pct(m.taxRate)} tax rate ÷ equity + debt − cash, from SEC figures).`}; }
   if(kind==="gm" && m.latest.gm!=null){ const g=m.latest.gm; return {verdict:g>=0.5?"yes":g>=0.35?"partly":"no", evidence:`Gross margin ${pct(g)} in ${m.fy}${gpWorked(m)? ", worked out as "+GP_METHOD[m.gpMethod]+", because the company reports no gross profit figure" : ""}.`}; }
   if(kind==="fcf" && m.latest.fm!=null){ const f=m.latest.fm, ni=(m.nm&&m.nm[L]!=null)? m.nm[L] : null, conv=(ni&&ni>0)? f/ni : null;
-    return {verdict:f>=0.15&&(conv==null||conv>=0.8)?"yes":f>0.05?"partly":"no", evidence:`Free cash flow is ${pct(f)} of sales in ${m.fy}${conv!=null?`, about ${Math.round(conv*100)}% of net profit`:""}.`}; }
+    return {verdict:f>=0.15&&(conv==null||conv>=0.8)?"yes":f>0.05?"partly":"no", evidence:`Free cash flow margin is ${pct(f)} in ${m.fy}${conv!=null?`, about ${Math.round(conv*100)}% of net profit`:""}.`}; }
   if(kind==="ni10" && m.nm){ const ys=[]; for(let i=m.nm.length-1;i>=0&&ys.length<10;i--) if(m.nm[i]!=null) ys.unshift(m.nm[i]);
     if(ys.length>=5){ const pos=ys.filter(v=>v>0).length; return {verdict:pos===ys.length&&ys.length>=10?"yes":pos===ys.length?"partly":"no", evidence:`Profitable in ${pos} of the last ${ys.length} years on record.`}; } }
   if(kind==="eps10" && m.eps){ const e=m.eps.slice(-10).filter(v=>v!=null); if(e.length>=6){ const a=e.slice(0,3).reduce((s,v)=>s+v,0)/3, b=e.slice(-3).reduce((s,v)=>s+v,0)/3;
@@ -2405,8 +2412,8 @@ ${checklistPromptPart()}
    Restaurants, for example, report food and packaging, labour and occupancy instead of a cost of sales. Each company gets one method
    (the best one available for its latest year), so its years compare fairly. */
 const GP_METHOD={
-  direct:"sales minus food and packaging (or materials), labour, occupancy and other operating costs, as reported to the SEC",
-  opex:"sales minus all operating costs except overheads (operating profit plus selling, general and administrative costs, R&D and other operating items, from SEC figures)",
+  direct:"revenue minus food and packaging (or materials), labour, occupancy and other operating costs, as reported to the SEC",
+  opex:"revenue minus all operating costs except overheads (operating profit plus selling, general and administrative costs, R&D and other operating items, from SEC figures)",
   opexT:"operating profit plus the company's reported total operating expenses (everything except the cost of sales)"};
 function grossProfitFrom(get, rev, opIn){
   const gp=get(["GrossProfit"]), cogs=get(["CostOfRevenue","CostOfGoodsAndServicesSold","CostOfGoodsSold","CostOfServices","CostOfSales"]);
@@ -2437,7 +2444,7 @@ function grossProfitFrom(get, rev, opIn){
   return {v, method, gaps, fills, sgaParts: sgaParts.filter(i=>v[i]!=null && (method==="opex" || fills.some(f=>f.method==="opex"&&f.years.includes(i))))};
 }
 const gpWorked=m=> !!(m && m.gpMethod && m.gpMethod!=="sec");
-const GP_SEC="sales minus cost of sales (or the reported gross profit)";
+const GP_SEC="revenue minus cost of revenue (or the reported gross profit)";
 const gpFillNote=(years, fills)=> (fills||[]).map(f=>` For ${f.years.map(i=>years[i]).join(", ")}, gross profit is ${f.method==="sec"? GP_SEC : GP_METHOD[f.method]}, which matches the main method in every year both can be worked out.`).join("");
 const gpPartsNote=(years, idx)=> idx&&idx.length? ` For ${idx.map(i=>years[i]).join(" and ")}, the company reported selling, general and administrative costs only as two parts (other SG&A, and the depreciation shown within SG&A), so they were added together; in every other year that reports all three, SG&A equals these two parts (to within rounding of $1–2 million).` : "";
 // years left blank rather than estimated, when a figure the calculation needs wasn't reported in standard form
@@ -2458,15 +2465,15 @@ function deriveCore(get, revTags){
   const ce=get(["CostsAndExpenses"]), opx=get(["OperatingExpenses"]), gpR=get(["GrossProfit"]), cogs=get(["CostOfRevenue","CostOfGoodsAndServicesSold","CostOfGoodsSold","CostOfServices","CostOfSales"]);
   let rev=get(revTags), op=get(["OperatingIncomeLoss","ProfitLossFromOperatingActivities"]);
   rptd.rev=rev.slice(); rptd.op=op.slice();
-  rev=log("rev","Sales","operating profit plus total costs and expenses", fillFrom(rev, zipN((a,b)=>a+b, rptd.op, ce)));
-  rev=log("rev","Sales","gross profit plus cost of sales", fillFrom(rev, zipN((a,b)=>a+b, gpR, cogs)));
-  op=log("op","Operating profit","sales minus total costs and expenses", fillFrom(op, zipN((a,b)=>a-b, rptd.rev, ce)));
+  rev=log("rev","Revenue","operating profit plus total costs and expenses", fillFrom(rev, zipN((a,b)=>a+b, rptd.op, ce)));
+  rev=log("rev","Revenue","gross profit plus cost of revenue", fillFrom(rev, zipN((a,b)=>a+b, gpR, cogs)));
+  op=log("op","Operating profit","revenue minus total costs and expenses", fillFrom(op, zipN((a,b)=>a-b, rptd.rev, ce)));
   op=log("op","Operating profit","gross profit minus operating expenses", fillFrom(op, zipN((a,b)=>a-b, gpR, opx)));
   // net profit belonging to shareholders: total profit minus the part belonging to minority (non-controlling) owners
   const pl=get(["ProfitLoss"]), nci=get(["NetIncomeLossAttributableToNoncontrollingInterest"]);
   let ni=get(["NetIncomeLoss","ProfitLossAttributableToOwnersOfParent"]);
-  ni=log("ni","Net profit","total profit minus the minority owners' share", fillFrom(ni, zipN((a,b)=>a-b, pl, nci)));
-  ni=log("ni","Net profit","total profit (the company's figures show no minority owners' share)", fillFrom(ni, pl));
+  ni=log("ni","Net profit","consolidated net income minus the non-controlling interest", fillFrom(ni, zipN((a,b)=>a-b, pl, nci)));
+  ni=log("ni","Net profit","consolidated net income (no non-controlling interest reported)", fillFrom(ni, pl));
   const ocfC=get(["NetCashProvidedByUsedInOperatingActivitiesContinuingOperations"]), ocfD=get(["CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations"]);
   let ocf=get(["NetCashProvidedByUsedInOperatingActivities","CashFlowsFromUsedInOperatingActivities"]);
   ocf=log("ocf","Cash from the business","cash from continuing plus discontinued operations", fillFrom(ocf, zipN((a,b)=>a+b, ocfC, ocfD)));
@@ -2550,14 +2557,14 @@ function companyMetrics(p){
   return {years:Y, fy:Y[L], cur, rev, gm, om, nm, rd, fm, roic, op, ocf, eq, debt, cdebt, cash, eps, L, latest:{rev:rev[L], gm:at(gm), om:at(om), nm:at(nm), rd:at(rd), fm:at(fm), roic:at(roic), g3}, gmSd:sd, gmTrend, gpMethod:gpr.method, gpGaps:gpr.gaps, gpParts:gpr.sgaParts, gpFills:gpr.fills, taxRate:at(taxRate), derived:D.notes, calcK};
 }
 const R_METRICS=[
-  {k:"gm", label:"Gross margin", hint:"Sales left after the direct cost of making the product. The clearest sign of pricing power.", f:"pct"},
-  {k:"om", label:"Operating margin", hint:"Profit from the business itself, after all running costs.", f:"pct"},
-  {k:"nm", label:"Net margin", hint:"Final profit as a share of sales.", f:"pct"},
-  {k:"g3", label:"Sales growth (3 yrs)", hint:"Average yearly sales growth over the last three years.", f:"pct"},
-  {k:"roic", label:"Return on capital", hint:"Operating profit after the company's actual tax rate that year (income tax ÷ profit before tax), divided by the money tied up in the business (equity + debt − cash). Above about 10% means it earns more than its cost of capital.", f:"pct"},
-  {k:"fm", label:"Free cash flow margin", hint:"Cash from the business minus spending on buildings and equipment, as a share of sales.", f:"pct"},
-  {k:"rd", label:"R&D spending", hint:"Research and development as a share of sales.", f:"pct"},
-  {k:"rev", label:"Sales (latest year)", hint:"Latest full-year sales, in US dollars where the company reports in dollars.", f:"money"}
+  {k:"gm", label:"Gross margin", hint:"Revenue less cost of revenue, as a percentage of revenue. The clearest sign of pricing power.", f:"pct"},
+  {k:"om", label:"Operating margin", hint:"Operating income as a percentage of revenue.", f:"pct"},
+  {k:"nm", label:"Net margin", hint:"Net income as a percentage of revenue.", f:"pct"},
+  {k:"g3", label:"Revenue CAGR (3 yrs)", hint:"Compound annual revenue growth over the last three years.", f:"pct"},
+  {k:"roic", label:"Return on capital", hint:"Operating profit after the company's actual tax rate that year (income tax ÷ profit before tax), divided by invested capital (equity + debt − cash). Above about 10% means it earns more than its cost of capital.", f:"pct"},
+  {k:"fm", label:"Free cash flow margin", hint:"Operating cash flow less capital expenditure, as a percentage of revenue.", f:"pct"},
+  {k:"rd", label:"R&D spending", hint:"Research and development expense as a percentage of revenue.", f:"pct"},
+  {k:"rev", label:"Revenue (latest year)", hint:"Latest fiscal-year revenue, in US dollars where the company reports in dollars.", f:"money"}
 ];
 const median=a=>{ const s=a.filter(v=>v!=null&&isFinite(v)).sort((x,y)=>x-y); if(!s.length) return null; const m=Math.floor(s.length/2); return s.length%2? s[m] : (s[m-1]+s[m])/2; };
 const rfmt=(m,v)=> v==null||!isFinite(v)? "—" : m.f==="money"? money(v) : (v*100).toFixed(Math.abs(v)<0.1?1:0)+"%";
@@ -2752,14 +2759,14 @@ function renderResearch(){ syncNotes();
                                                : "Claude isn't sure of the official wording, so this is a summary of the company's purpose.";
   const ab=res.about||{};
   $("resAbout").textContent=ab.plain||"Claude didn't give a plain description for this company.";
-  $("resAboutMore").textContent=[ab.customers? "Who buys from it: "+ab.customers : "", ab.everyday||""].filter(Boolean).join(" ");
+  $("resAboutMore").textContent=[ab.customers? "Customer base: "+ab.customers : "", ab.everyday||""].filter(Boolean).join(" ");
   const parts=(Array.isArray(ab.money)? ab.money : []).filter(x=>x&&x.part);
   // how it makes money: for a company that files with the SEC, only exact figures are shown, and the SEC data here has no
   // segment sales, so its business lines are listed without shares. Other companies get a pie of Claude's estimated shares.
   const PIE=["var(--c1)","var(--c2)","var(--c3)","var(--c4)","var(--c5)"];
   const selfSec=!!(self && self.src==="sec");
   // tag on each business line: Main, New, or Moonshot (explosive potential), Claude's judgment
-  const SEGTAG={main:["Main","An established business line that brings in a large part of sales"], new:["New","A business line launched or entered in roughly the last 3 years"], moonshot:["Moonshot","Could grow many times over or reshape the company, even if unproven"]};
+  const SEGTAG={main:["Main","An established segment that contributes a large share of revenue"], new:["New","A business line launched or entered in roughly the last 3 years"], moonshot:["Moonshot","Could grow many times over or reshape the company, even if unproven"]};
   const tagOf=x=>{ const t=SEGTAG[String(x&&x.tag||"").toLowerCase().trim()]; return t? `<span class="segtag ${String(x.tag).toLowerCase().trim()}" title="${esc(t[1])} (Claude's judgment)">${t[0]}</span>` : ""; };
   const sh=parts.map(x=> !selfSec && x.share!=null&&isFinite(x.share)&&x.share>0? Math.min(1,x.share) : null);
   const mix=selfSec? self.mix : null;
@@ -2770,12 +2777,12 @@ function renderResearch(){ syncNotes();
     const slices=mix.lines.map((x,i)=>({...x, col: x.other? "var(--muted)" : PIE[i%PIE.length], op: !x.other && i>=PIE.length? 0.55 : 1}));
     const R=15.9155, C=2*Math.PI*R; let off=0;
     const arcs= base? slices.map(x=>{ const len=Math.max(0,x.v)/base*C, a=`<circle r="${R}" cx="21" cy="21" fill="none" stroke="${x.col}" stroke-opacity="${x.op}" stroke-width="8" stroke-dasharray="${len.toFixed(3)} ${(C-len).toFixed(3)}" stroke-dashoffset="${(-off).toFixed(3)}"><title>${esc(x.name)}: ${(x.v/base*100).toFixed(1)}%</title></circle>`; off+=len; return a; }).join("") : "";
-    const calcNote= mix.lines.some(x=>x.calc)? ` Lines marked calc. are worked out from the reported figures (${mix.kind==="part"? "total sales minus the lines reported" : "the smaller lines added together"}).` : "";
-    const head= base? `How it makes money: share of sales by ${mix.by}, ${esc(mix.fy)}`
-                    : `How it makes money: sales by ${mix.by}, ${esc(mix.fy)} (shares aren't shown because these lines add up to more than total sales, for example sales between its own segments)`;
-    $("resMoney").innerHTML=`<p class="note" style="margin:6px 0 0">${head}. Exact figures from the company's annual report filed with the SEC.${calcNote}</p><div class="mpie">${base? `<svg viewBox="0 0 42 42" role="img" aria-label="Share of sales by ${mix.by}"><g transform="rotate(-90 21 21)">${arcs}</g></svg>` : ""}<ul>`
+    const calcNote= mix.lines.some(x=>x.calc)? ` Lines marked calc. are worked out from the reported figures (${mix.kind==="part"? "total revenue minus the reported segments" : "the smaller lines added together"}).` : "";
+    const head= base? `Revenue mix: share of revenue by ${mix.by}, ${esc(mix.fy)}`
+                    : `Revenue mix: revenue by ${mix.by}, ${esc(mix.fy)} (percentages aren't shown because these lines add up to more than total revenue, for example intersegment sales)`;
+    $("resMoney").innerHTML=`<p class="note" style="margin:6px 0 0">${head}. Exact figures from the company's annual report filed with the SEC.${calcNote}</p><div class="mpie">${base? `<svg viewBox="0 0 42 42" role="img" aria-label="Share of revenue by ${mix.by}"><g transform="rotate(-90 21 21)">${arcs}</g></svg>` : ""}<ul>`
       +slices.map(x=>`<li><span class="sw" style="background:${x.col};opacity:${x.op}"></span><b>${esc(x.name)}${x.calc? ' <i class="estmark" title="Worked out from other reported SEC figures">calc.</i>' : ""}</b><span class="mv">${base? (x.v/base*100).toFixed(x.v/base<0.1?1:0)+"%" : amt(x.v,mix.unit)}</span>${base? `<span class="mp">${amt(x.v,mix.unit)}</span>` : ""}</li>`).join("")+`</ul></div>`
-      +plainList("Its business lines in plain words (tags are Claude's judgment):");
+      +plainList("Business segments (tags are Claude's judgment):");
   } else if(parts.length && sh.some(v=>v!=null)){
     const tot=sh.reduce((a,v)=>a+(v||0),0), scale=Math.max(1,tot), other=tot<0.99? 1-tot : 0;
     const slices=parts.map((x,i)=>({name:x.part, plain:x.plain, tag:tagOf(x), v:sh[i], col:PIE[i%PIE.length]})).filter(x=>x.v!=null);
@@ -2783,11 +2790,11 @@ function renderResearch(){ syncNotes();
     const R=15.9155, C=2*Math.PI*R; let off=0;
     const arcs=slices.map(x=>{ const len=x.v/scale*C, a=`<circle r="${R}" cx="21" cy="21" fill="none" stroke="${x.col}" stroke-width="8" stroke-dasharray="${len.toFixed(3)} ${(C-len).toFixed(3)}" stroke-dashoffset="${(-off).toFixed(3)}"><title>${esc(x.name)}: ${Math.round(x.v*100)}%</title></circle>`; off+=len; return a; }).join("");
     const noShare=parts.filter((x,i)=>sh[i]==null);
-    $("resMoney").innerHTML=`<p class="note" style="margin:6px 0 0">How it makes money (share of sales, Claude's estimate) <i class="estmark">est.</i></p><div class="mpie"><svg viewBox="0 0 42 42" role="img" aria-label="Share of sales by business line"><g transform="rotate(-90 21 21)">${arcs}</g></svg><ul>`
+    $("resMoney").innerHTML=`<p class="note" style="margin:6px 0 0">Revenue mix (share of revenue, Claude's estimate) <i class="estmark">est.</i></p><div class="mpie"><svg viewBox="0 0 42 42" role="img" aria-label="Share of revenue by business line"><g transform="rotate(-90 21 21)">${arcs}</g></svg><ul>`
       +slices.map(x=>`<li><span class="sw" style="background:${x.col}"></span><b>${esc(x.name)}${x.tag||""}</b><span class="mv">${Math.round(x.v*100)}%</span>${x.plain?`<span class="mp">${esc(x.plain)}</span>`:""}</li>`).join("")
       +noShare.map(x=>`<li><span class="sw" style="border:1px dashed var(--muted)"></span><b>${esc(x.part)}${tagOf(x)}</b><span class="mv">—</span>${x.plain?`<span class="mp">${esc(x.plain)}</span>`:""}</li>`).join("")+`</ul></div>`;
   } else {
-    $("resMoney").innerHTML= plainList(`How it makes money${selfSec? " (shares of sales aren't shown: this company's SEC figures here don't yet include sales by business line)" : ""}:`).replace('margin:10px 0 0','margin:6px 0 0');
+    $("resMoney").innerHTML= plainList(`Revenue mix${selfSec? " (percentages aren't shown: this company's SEC figures here don't yet include revenue by segment)" : ""}:`).replace('margin:10px 0 0','margin:6px 0 0');
   }
   $("resMeta").textContent=`Claude's assessment as of ${res.asOf||"recent data"} · financial figures from SEC filings where available`;
   // signs of a competitive advantage
@@ -2797,12 +2804,12 @@ function renderResearch(){ syncNotes();
   const signs=[];
   const L=sm? sm.latest : {};
   const add=(ok,label,detail)=>signs.push({ok,label,detail});
-  if(L.gm!=null && med("gm")!=null) add(L.gm>med("gm"), "Gross margin above the competitors' middle", `${rfmt({f:"pct"},L.gm)} vs ${rfmt({f:"pct"},med("gm"))} for the typical competitor${(gpWorked(sm)||peers.some(c=>gpWorked(c.m)))? " (some worked out from reported costs; see the note under Gross margin over time)" : ""}`);
+  if(L.gm!=null && med("gm")!=null) add(L.gm>med("gm"), "Gross margin above the peer median", `${rfmt({f:"pct"},L.gm)} vs ${rfmt({f:"pct"},med("gm"))} peer median${(gpWorked(sm)||peers.some(c=>gpWorked(c.m)))? " (some worked out from reported costs; see the note under Gross margin over time)" : ""}`);
   if(sm && sm.gmTrend!=null) add(sm.gmTrend>=-0.01, "Gross margin steady or rising", `${sm.gmTrend>=0?"Up":"Down"} ${Math.abs(sm.gmTrend*100).toFixed(1)} points over the last ${Math.min(5,sm.gm.filter(v=>v!=null).length)} years${gpWorked(sm)? " (worked out from reported costs)" : ""}`);
-  if(L.om!=null && med("om")!=null) add(L.om>med("om"), "Operating margin above the competitors' middle", `${rfmt({f:"pct"},L.om)} vs ${rfmt({f:"pct"},med("om"))}`);
+  if(L.om!=null && med("om")!=null) add(L.om>med("om"), "Operating margin above the peer median", `${rfmt({f:"pct"},L.om)} vs ${rfmt({f:"pct"},med("om"))}`);
   if(L.roic!=null) add(L.roic>0.10, "Return on capital above about 10%", `${rfmt({f:"pct"},L.roic)}, using its actual ${rfmt({f:"pct"},sm.taxRate)} tax rate`);
-  if(L.g3!=null && med("g3")!=null) add(L.g3>med("g3"), "Sales growing faster than competitors", `${rfmt({f:"pct"},L.g3)} a year vs ${rfmt({f:"pct"},med("g3"))}`);
-  if(share){ const s=share.share(share.members.find(c=>c.self)); const ch=s[s.length-1]-s[0]; add(ch>0, "Gaining share of the group's sales", `${(s[0]*100).toFixed(1)}% → ${(s[s.length-1]*100).toFixed(1)}% (${share.years[0]}–${share.years[share.years.length-1]})`); }
+  if(L.g3!=null && med("g3")!=null) add(L.g3>med("g3"), "Revenue growth above the peer median", `${rfmt({f:"pct"},L.g3)} a year vs ${rfmt({f:"pct"},med("g3"))}`);
+  if(share){ const s=share.share(share.members.find(c=>c.self)); const ch=s[s.length-1]-s[0]; add(ch>0, "Gaining share of peer-group revenue", `${(s[0]*100).toFixed(1)}% → ${(s[s.length-1]*100).toFixed(1)}% (${share.years[0]}–${share.years[share.years.length-1]})`); }
   const strong=(res.moats||[]).filter(x=>/strong|moderate/i.test(x.strength||""));
   add(strong.length>0, "Clear source of advantage identified", strong.length? strong.map(x=>x.source.replace(/ \(.*\)$/,"")+" ("+x.strength+")").join(", ") : "None rated moderate or strong");
   const yes=signs.filter(x=>x.ok).length;
@@ -2853,18 +2860,18 @@ function renderResearch(){ syncNotes();
     if(rest.length){ const rs=rest.map(c=>share.share(c)); list.push({name:`Other ${rest.length} competitor${rest.length>1?"s":""}`,color:"var(--muted)",vals:share.years.map((_,i)=>rs.reduce((a,s)=>a+s[i],0))}); }
     finChart($("resShare"),"line",list,fmtPct,share.years); legendHTML($("lgResShare"),list.map(s=>[s.name,s.color,"line"]));
     const s=share.share(selfC), ch=(s[s.length-1]-s[0])*100;
-    $("resShareText").innerHTML=`${esc(selfC.name)}'s share of the group's combined ${share.picked? "competing " : ""}sales went from <b>${(s[0]*100).toFixed(1)}%</b> in ${esc(share.years[0])} to <b>${(s[s.length-1]*100).toFixed(1)}%</b> in ${esc(share.years[share.years.length-1])}: <b>${ch>=0?"▲ gaining":"▼ losing"} ${Math.abs(ch).toFixed(1)} points</b>.`;
-    const what=c=> !share.picked || c.pick.use==="all"? "all sales" : c.pick.lines.map(l=>l.name).join(" + ");
-    $("resShareText").innerHTML+= share.picked? " Only sales from business lines that compete with it are counted." : "";
+    $("resShareText").innerHTML=`${esc(selfC.name)}'s share of the peer group's combined ${share.picked? "competing " : ""}revenue went from <b>${(s[0]*100).toFixed(1)}%</b> in ${esc(share.years[0])} to <b>${(s[s.length-1]*100).toFixed(1)}%</b> in ${esc(share.years[share.years.length-1])}: <b>${ch>=0?"▲ gaining":"▼ losing"} ${Math.abs(ch).toFixed(1)} points</b>.`;
+    const what=c=> !share.picked || c.pick.use==="all"? "total revenue" : c.pick.lines.map(l=>l.name).join(" + ");
+    $("resShareText").innerHTML+= share.picked? " Only revenue from competing segments is counted." : "";
     $("resShareNote").textContent= share.picked
-      ? `What counts for each company: ${share.members.map(c=>`${c.name}: ${what(c)}`).join("; ")}. Exact sales figures from SEC filings, in each company's fiscal years (which end in different months); Claude chose which business lines compete. ${share.excluded.length? "Not included (no competing business lines, or no SEC figures for them in every year): "+share.excluded.join(", ")+"." : ""}`
-      : `Group: ${share.members.map(c=>c.name).join(", ")}. Based on each company's total sales in its fiscal years (which end in different months) from SEC filings, so companies that also sell other things count in full (their sales by business line aren't available yet). ${share.excluded.length? "Not included (no US-dollar SEC figures for every year): "+share.excluded.join(", ")+"." : ""}`;
+      ? `What counts for each company: ${share.members.map(c=>`${c.name}: ${what(c)}`).join("; ")}. Exact revenue figures from SEC filings, in each company's fiscal years (which end in different months); Claude chose which business lines compete. ${share.excluded.length? "Not included (no competing business lines, or no SEC figures for them in every year): "+share.excluded.join(", ")+"." : ""}`
+      : `Group: ${share.members.map(c=>c.name).join(", ")}. Based on each company's total revenue in its fiscal years (which end in different months) from SEC filings, so diversified companies count in full (their segment revenue isn't available yet). ${share.excluded.length? "Not included (no US-dollar SEC figures for every year): "+share.excluded.join(", ")+"." : ""}`;
     $("resShareComp").hidden=false;
   } else { $("resShareComp").hidden=true; }
   const ms=(res.marketShare||[]).filter(x=>x&&Array.isArray(x.rows)&&x.rows.length);
   $("resMarkets").innerHTML=ms.map(x=>{
     const rows=x.rows.slice().sort((a,b)=>(b.latest??-1)-(a.latest??-1));
-    return `<div class="mkt"><h4>${esc(x.market)} <span class="note">· share of ${esc(x.measure||"sales")}, ${esc(x.earlierYear||"")} → ${esc(x.latestYear||"")}</span></h4><table><thead><tr><th>Company</th><th>${esc(x.earlierYear||"Earlier")}</th><th>${esc(x.latestYear||"Latest")}</th><th>Change</th></tr></thead><tbody>${rows.map(r=>{ const d=(r.latest!=null&&r.earlier!=null)? (r.latest-r.earlier)*100 : null; const isSelf=norm(r.name).includes(norm(res.name||"").split(" ")[0]);
+    return `<div class="mkt"><h4>${esc(x.market)} <span class="note">· share of ${esc(x.measure||"revenue")}, ${esc(x.earlierYear||"")} → ${esc(x.latestYear||"")}</span></h4><table><thead><tr><th>Company</th><th>${esc(x.earlierYear||"Earlier")}</th><th>${esc(x.latestYear||"Latest")}</th><th>Change</th></tr></thead><tbody>${rows.map(r=>{ const d=(r.latest!=null&&r.earlier!=null)? (r.latest-r.earlier)*100 : null; const isSelf=norm(r.name).includes(norm(res.name||"").split(" ")[0]);
       return `<tr class="${isSelf?"selfrow":""}"><td>${esc(r.name)}</td><td class="num">${r.earlier!=null? (r.earlier*100).toFixed(0)+"%" : "—"}</td><td class="num">${r.latest!=null? (r.latest*100).toFixed(0)+"%" : "—"}</td><td class="num">${d==null? "—" : (d>0.4? "▲ +" : d<-0.4? "▼ −" : "● ")+Math.abs(d).toFixed(0)+" pts"}</td></tr>`; }).join("")}</tbody></table></div>`; }).join("") || '<p class="note">Claude had no reliable market-share estimates for this company.</p>';
 
   // sources of advantage
@@ -2891,7 +2898,7 @@ async function loadInvestors(force){   // website: the 13F tables straight from 
   try{
     const [a,b]=await Promise.all([dataText("sheet/investors.csv","the investor list"), dataText("sheet/investor_holdings.csv","the investor holdings")]);
     const rows=a? csvRows(parseCSVText(a)) : [], hold=b? csvRows(parseCSVText(b)) : [];
-    if(!rows.length) throw new Error("Famous investors' portfolios aren't available right now. Try again later.");
+    if(!rows.length) throw new Error("13F portfolios aren't available right now. Try again later.");
     INV.rows=rows; INV.hold=hold; INV.fetchedAt=new Date().toISOString();
     $("invStatus").hidden=true; renderInvestors();
   }catch(e){ $("invStatus").className="status err"; $("invStatus").textContent=e.message||String(e); }
