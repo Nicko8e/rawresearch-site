@@ -591,7 +591,7 @@ ul.litmus li{display:grid;gap:2px;padding-left:10px;border-left:3px solid var(--
           <dt>Revenue</dt><dd>Total income from the sale of goods and services in a fiscal year (the top line).</dd>
           <dt>Net profit margin</dt><dd>Net income as a percentage of revenue.</dd>
           <dt>CAGR</dt><dd>Compound annual growth rate: the constant yearly rate that takes a figure from its starting value to its ending value over a period.</dd>
-          <dt>Discount rate</dt><dd>The annual rate used to convert future earnings to present value. At 0%, a dollar earned in year 20 counts the same as a dollar today.</dd>
+          <dt>Discount rate</dt><dd>The annual rate used to convert future earnings to present value. Defaults to 10% a year; you can change it under Assumptions. At 0%, a dollar earned in year 20 counts the same as a dollar today.</dd>
           <dt>Dilution</dt><dd>The reduction in existing shareholders' ownership when new shares are issued, often through stock-based compensation.</dd>
           <dt>SEC-verified</dt><dd>Figures reconciled to the company's filings with the US Securities and Exchange Commission (10-K and 10-Q reports on EDGAR).</dd>
         </dl>
@@ -892,7 +892,7 @@ function compute(){
   const s3 = ov.stage3!=null? ov.stage3/100 : s3auto;
   const mAuto = d.optimizedMargin!=null? d.optimizedMargin : (d.currentNetMargin!=null? Math.max(d.currentNetMargin,0.05):0.15);
   const m = ov.margin!=null? ov.margin/100 : mAuto;
-  const r = ov.disc!=null? ov.disc/100 : 0;
+  const r = ov.disc!=null? ov.disc/100 : 0.10;
   const dilAuto = hs.dil!=null? Math.max(hs.dil,0) : 0;
   const dil = ov.dil!=null? ov.dil/100 : dilAuto;
   const dilYrs = ov.dilYrs!=null? ov.dilYrs : 10;
@@ -1009,7 +1009,7 @@ function render(){ syncNotes();
   // assumptions placeholders show the automatic value
   const setPh=(id,v,dec=1)=>{ $(id).placeholder = (v==null||!isFinite(v))? "" : (v*100).toFixed(dec); };
   setPh("aCustom", c.G5); setPh("aStage2",c.s2auto); setPh("aStage3",c.s3auto);
-  setPh("aMargin",c.mAuto); $("aDisc").placeholder="0"; setPh("aDil",c.dilAuto,2); $("aDilYrs").placeholder="10";
+  setPh("aMargin",c.mAuto); $("aDisc").placeholder="10"; setPh("aDil",c.dilAuto,2); $("aDilYrs").placeholder="10";
   $("asmNote").textContent = `Blank fields use the default shown. Years 1–5 default to the selected scenario (${state.custom? "now overridden by your rate" : pct(c.G5)+" a year on average, stepping from "+pct(c.y1)+" in year 1 to "+pct(c.y45)+" in year 5"}); type a rate to apply it flat to all five years. Years 6–10 default to half the 5-year forecast rate. Years 11–20 default to 4–10% based on how fast the company is still growing. Margin: ${d.marginRationale||"a steady-state net margin for a revenue-optimized business."} Dilution: ${c.hs.dil!=null? "past "+c.hs.shYears+"-year average "+pct(c.hs.dil,2)+" per year"+(c.hs.dil<0?" (net buybacks, not credited because they are paid from the same profits)":"") : "no share history, so 0% is used"}. It is applied over ${c.dilYrs} years, the midpoint of the 20-year horizon.`;
 
   // projections table
