@@ -4,7 +4,8 @@
 //   node tools/research-queue.mjs next [N]
 //       Picks the next N prompts to answer and writes each to tools/work/<file>.prompt.txt (default N = 20):
 //         1. visitors' requests waiting in tools/queue.json, most-requested first;
-//         2. every company in tools/order-ranked.txt (largest market cap first) that has no Research, Valuation or
+//         2. every company in tools/order-ranked.txt (S&P 500 first, then other Nasdaq-100 members, then everyone else;
+//            largest market cap first within each group) that has no Research, Valuation or
 //            investor-frameworks answer;
 //         3. once all are done, the oldest answers (older than 30 days), so the research stays current.
 //   node tools/research-queue.mjs save <file> <answer-file>
