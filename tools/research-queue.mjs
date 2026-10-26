@@ -28,7 +28,7 @@ const REFRESH_DAYS = 30, UNCLEAR_AT = 200, DEPLOY_EVERY_H = 2;
 // Every company gets Research, Valuation and every investor framework (one combined prompt) ahead of time.
 const kindsFor = () => ["research", "valuation", "frameworks"];
 const FW_TOPUP_TOP = 100;
-const VAL_PROJ_SINCE = Date.parse("2026-10-26T02:00:00Z");   // valuation answers before this lack the 3- and 5-year forecast rules     // frameworks answers saved before a framework was added are all in the largest 100
+const VAL_PROJ_SINCE = Date.parse("2026-10-26T01:05:00Z");   // valuation answers before this lack the 3- and 5-year forecast rules     // frameworks answers saved before a framework was added are all in the largest 100
 const die = m => { console.error("research-queue: " + m); process.exit(1); };
 const read = f => fs.existsSync(f) ? fs.readFileSync(f, "utf8") : "";
 const fileOf = id => id.replace(/\//g, "__"), idOf = file => file.replace(/__/g, "/");
