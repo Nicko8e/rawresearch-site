@@ -27,7 +27,8 @@ const WORK = path.join(ROOT, "tools/work"), ANSWERS = path.join(ROOT, "public/an
 const REFRESH_DAYS = 30, UNCLEAR_AT = 200, DEPLOY_EVERY_H = 2;
 // Every company gets Research, Valuation and every investor framework (one combined prompt) ahead of time.
 const kindsFor = () => ["research", "valuation", "frameworks"];
-const FW_TOPUP_TOP = 100;     // frameworks answers saved before a framework was added are all in the largest 100
+const FW_TOPUP_TOP = 100;
+const VAL_PROJ_SINCE = Date.parse("2026-10-26T02:00:00Z");   // valuation answers before this lack the 3- and 5-year forecast rules     // frameworks answers saved before a framework was added are all in the largest 100
 const die = m => { console.error("research-queue: " + m); process.exit(1); };
 const read = f => fs.existsSync(f) ? fs.readFileSync(f, "utf8") : "";
 const fileOf = id => id.replace(/\//g, "__"), idOf = file => file.replace(/__/g, "/");
@@ -103,6 +104,13 @@ if (cmd === "next") {
       if (need.length) picked.push({id: `frameworks/${t}`, prompt: ps[i], why: `add ${need.length} new answers`,
         update: `This company already has an answer: public/answers/frameworks/${t}.json. Keep its "result" exactly as it is and add only these missing entries (the prompt says what each one asks), then save the whole object:\n${need.join("\n")}\n`});
     });
+  }
+  // 1b. Valuation answers saved before the 3- and 5-year forecast rules (2026-10-26): redo only their "projections"
+  const valOld = ord.filter(t => { const at = answeredAt(`valuation/${t}`); return at && at < VAL_PROJ_SINCE; });
+  if (valOld.length && picked.length < n) {
+    const ps = await promptsFor(valOld.slice(0, n - picked.length).map(t => ["valuation", t, nm.get(t)]));
+    ps.forEach((pr, i) => picked.push({id: `valuation/${valOld[i]}`, prompt: pr, why: "add 3- and 5-year forecasts",
+      update: `This company already has an answer: public/answers/valuation/${valOld[i]}.json. Keep its "result" exactly as it is except "projections": research them again following the prompt's rules for "projections" (look hard for 3- and 5-year forecasts and the low and high estimates for each horizon), replace "projections" with the new list, set "dataAsOf" to the newest data used, then save the whole object.\n`}));
   }
   // 2. every company, largest first; 3. then the oldest answers
   for (let i = 0; i < ord.length && picked.length + todo.length < n; i++)

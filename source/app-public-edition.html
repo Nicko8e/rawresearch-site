@@ -499,7 +499,7 @@ ul.litmus li{display:grid;gap:2px;padding-left:10px;border-left:3px solid var(--
 
       <section class="panel sec fade">
         <header><h3>Revenue growth scenario</h3></header>
-        <p class="muted" style="margin:0">Analyst revenue growth estimates vary. Each scenario takes a different point in that range: 1 the low end, 3 the median, 5 the high end. The valuation updates as soon as you pick one.</p>
+        <p class="muted" style="margin:0">Each scenario takes a different point in the range of estimates, for each horizon: 1 the lowest analyst estimate, 3 the median of all estimates including the company's historical revenue CAGR, 5 the highest analyst estimate, with 2 and 4 halfway between. The valuation updates as soon as you pick one.</p>
         <div class="scale" id="scale" role="group" aria-label="Growth scenario"></div>
         <p class="scnote" id="scNote"></p>
         <p class="pending" hidden>Press <b>Apply</b> under Assumptions to use your changes.</p>
@@ -815,7 +815,7 @@ ul.litmus li{display:grid;gap:2px;padding-left:10px;border-left:3px solid var(--
 (() => {
 const $ = id => document.getElementById(id);
 const LEVELS = [
-  {k:1, l:"Conservative", s:"the lowest forecasts"},{k:2, l:"Cautious", s:"below-middle forecasts"},{k:3, l:"Moderate", s:"the middle forecasts"},{k:4, l:"Confident", s:"above-middle forecasts"},{k:5, l:"Optimistic", s:"the highest forecasts"}
+  {k:1, l:"Conservative", s:"the lowest analyst estimate"},{k:2, l:"Cautious", s:"the midpoint of the lowest and median estimates"},{k:3, l:"Moderate", s:"the median of all estimates, including historical revenue CAGR"},{k:4, l:"Confident", s:"the midpoint of the median and highest estimates"},{k:5, l:"Optimistic", s:"the highest analyst estimate"}
 ];
 
 let state = {data:null, source:null, asOf:null, sources:[], price:null, priceNote:"", level:3, custom:false, showAll:false, ov:{}};
@@ -844,20 +844,29 @@ function histStats(d){
   return {rh, sh, revCagr, dil, rev0: rh.length? rh[rh.length-1].revenue : null, revYears: rh.length-1, shYears: sh.length-1};
 }
 
+/* Scenarios, per horizon (Nic, 2026-10-26): Moderate is the median of every estimate, including the company's own
+   historical revenue CAGR; Conservative the lowest analyst estimate; Optimistic the highest; Cautious and Confident
+   halfway between Moderate and the low or high end. A horizon with no analyst estimate uses the historical CAGR alone. */
 function scenarioSets(d, hs){
   const P=(d.projections||[]);
   const sets={g1:[],g3:[],g5:[]};
   for(const p of P){ for(const k of ["g1","g3","g5"]) if(p[k]!=null&&isFinite(p[k])) sets[k].push(p[k]); }
-  if(hs.revCagr!=null) for(const k of ["g1","g3","g5"]) sets[k].push(hs.revCagr);
-  // fill empty horizons from the nearest one that has data
-  if(!sets.g3.length) sets.g3 = sets.g5.length? sets.g5.slice() : sets.g1.slice();
-  if(!sets.g5.length) sets.g5 = sets.g3.slice();
-  if(!sets.g1.length) sets.g1 = sets.g3.slice();
+  sets.hist=hs.revCagr;
   return sets;
 }
+function horizonLevels(est, hist){
+  const all=est.concat(hist!=null&&isFinite(hist)? [hist] : []);
+  if(!all.length) return null;
+  const mid=quantile(all,0.5);
+  const lo=est.length? Math.min(Math.min(...est), mid) : mid, hi=est.length? Math.max(Math.max(...est), mid) : mid;
+  return [lo, (lo+mid)/2, mid, (mid+hi)/2, hi];
+}
 function levelRates(sets, level){
-  const q=(level-1)/4;
-  return {G1:quantile(sets.g1,q), G3:quantile(sets.g3,q), G5:quantile(sets.g5,q)};
+  const at=k=>{ const L=horizonLevels(sets[k], sets.hist); return L? L[level-1] : null; };
+  let G1=at("g1"), G3=at("g3"), G5=at("g5");
+  if(G3==null) G3= G5!=null? G5 : G1;
+  if(G5==null) G5=G3; if(G1==null) G1=G3;
+  return {G1, G3, G5};
 }
 
 function compute(){
@@ -989,7 +998,7 @@ function render(){ syncNotes();
     const b=document.createElement("button"); b.type="button";
     b.setAttribute("aria-pressed", String(!state.custom && state.level===L.k));
     b.innerHTML=`<span class="k">${L.k}</span><span class="l"></span><span class="g"></span>`;
-    b.querySelector(".l").textContent=L.l; b.querySelector(".g").textContent=pct(r.G5,0)+" p.a.";
+    b.querySelector(".l").textContent=L.l; b.querySelector(".g").textContent=pct(r.G5,1)+" p.a.";
     b.title=`${L.l}: 1-yr ${pct(r.G1)}, 3-yr ${pct(r.G3)}, 5-yr ${pct(r.G5)} per year`;
     b.onclick=()=>{ $("aCustom").value=""; if(state.ov) state.ov.custom=null; state.level=L.k; state.draftLevel=null; render(); flashResult(); };   // scenarios apply straight away
     sc.append(b);
@@ -1177,7 +1186,8 @@ Reply with ONLY one JSON object, no other text, in exactly this shape:
  "dataAsOf": "YYYY-MM of the newest data you used",
  "caveats": "one short sentence on anything uncertain, or null"
 }
-For "projections": list every analyst revenue growth projection you know for this company: the consensus, the high and low estimates, and each named broker or research firm. g1 is next-fiscal-year revenue growth; g3 and g5 are annualized revenue CAGRs over 3 and 5 years; all are measured from the last completed fiscal year in revenueHistory. Use null for horizons a source does not cover. Growth rates are decimals (0.15 = 15%).`;
+For "projections": list every analyst revenue growth projection you know for this company: the consensus, the high and low estimates, and each named broker or research firm. g1 is next-fiscal-year revenue growth; g3 and g5 are annualized revenue CAGRs over 3 and 5 years; all are measured from the last completed fiscal year in revenueHistory. Use null for horizons a source does not cover. Growth rates are decimals (0.15 = 15%).
+Look hard for 3- and 5-year forecasts, not just next year's. Sources that publish revenue estimates for several fiscal years ahead include StockAnalysis (annual revenue estimates, usually 3-5 years), MarketScreener, Morningstar, Zacks, Simply Wall St, Seeking Alpha and named brokers' published models; the company's own medium- or long-term revenue targets (investor day or guidance) count too, with "source" naming them as company guidance. Where a source gives revenue estimates for individual future fiscal years, work out g3 and g5 as the CAGR from the last completed fiscal year's revenue to the FY+3 and FY+5 estimates, and put those estimates in "note". For each horizon, give the consensus and, where published, its low and high estimates as separate entries. Never fill a horizon by copying another horizon's rate.`;
 }
 
 async function loadCompany(t){
